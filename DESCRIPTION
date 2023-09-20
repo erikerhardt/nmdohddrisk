@@ -27,7 +27,6 @@ Depends:
     utils,
     graphics
 Imports:
-    erikmisc,
     ROCR,
     cAIC4,
     car,
