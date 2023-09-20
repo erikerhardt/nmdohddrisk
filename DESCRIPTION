@@ -1,0 +1,63 @@
+Package: nmdohddrisk
+Type: Package
+Title: Risk Prediction model for NM DOH DD ANE
+Version: 0.0.01
+Date: 2023-09-20
+Authors@R:
+    c(person(
+      given = "Erik"
+    , family = "Erhardt"
+    , role = c("aut", "cre")
+    , email = "erike@statacumen.com"
+    , comment = c(ORCID = "0000-0002-9817-4011")
+    ))
+Description: Risk Prediction model for New Mexico (NM) Department of Health (DOH) Developmental Disabilities (DD) Abuse, Neglect, and Exploitation (ANE)
+License: MIT + file LICENSE
+URL: https://github.com/erikerhardt/nmdohddrisk
+BugReports: https://github.com/erikerhardt/nmdohddrisk/issues
+Encoding: UTF-8
+RoxygenNote: 7.2.3
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr
+NeedsCompilation: no
+LazyData: true
+Depends:
+    R (>= 4.3.0),
+    stats,
+    utils,
+    graphics
+Imports:
+    erikmisc,
+    ROCR,
+    cAIC4,
+    car,
+    caret,
+    cli,
+    cowplot,
+    crayon,
+    dplyr,
+    forcats,
+    ggplot2,
+    grid,
+    gridExtra,
+    janitor,
+    kableExtra,
+    knitr,
+    labelled,
+    lubridate,
+    magrittr,
+    patchwork,
+    purrr,
+    randomForestSRC,
+    readr,
+    readxl,
+    rlang,
+    rstudioapi,
+    scales,
+    stringi,
+    stringr,
+    tibble,
+    tidyr,
+    tidyselect
+Suggests:
+    rmarkdown
