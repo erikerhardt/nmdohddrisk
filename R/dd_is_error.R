@@ -7,7 +7,7 @@
 #'
 #' @examples
 #' sw_try_ok <-
-#'   !e_is_error(
+#'   !dd_is_error(
 #'     try(
 #'       # try what you want, check for error
 #'       log(NULL)
@@ -18,10 +18,10 @@
 #' } else {
 #'   # error, do something else
 #' }
-e_is_error <-
+dd_is_error <-
   function(
     f
   ) {
   # https://rdrr.io/cran/BBmisc/src/R/is_error.R
   inherits(f, c("try-error", "error"))
-} # e_is_error
+} # dd_is_error
