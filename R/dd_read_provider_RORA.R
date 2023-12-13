@@ -172,21 +172,26 @@ dd_read_provider_RORA <-
                                            )
                                        ) |>
                                        factor()
+    , Date                           = P_RORA_RequestDate
     , dat_provider_RORA = TRUE
+    ) |>
+    dplyr::relocate(
+      P_RORA_RoraType
+    ,  Date
     )
 
   #dat_provider_RORA |> str()
 
-
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_provider_RORA
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_provider_RORA
       , name_dat         = name_dat
       , path_results_dat = path_results_dat
@@ -308,7 +313,7 @@ dd_read_provider_RORA <-
 ##   }
 ##
 ##   if (sw_plot_missing) {
-##     nmdohddrisk::dd_plot_missing_codebook(
+##     dd_plot_missing_codebook(
 ##         dat_this         = dat_provider_RORA
 ##       , name_dat         = name_dat
 ##       , path_results_dat = path_results_dat

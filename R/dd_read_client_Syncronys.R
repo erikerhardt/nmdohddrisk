@@ -1,4 +1,4 @@
-#' Read Client Synchonys
+#' Read Client Syncronys
 #'
 #' @param fn_list           NULL, no list of files to read
 #' @param path_data         path to data
@@ -6,7 +6,7 @@
 #' @param sw_plot_missing   T/F plot missing values
 #' @param sw_codebook       T/F generage codebook (only runs if \code{sw_plot_missing} is also \code{TRUE}
 #'
-#' @return dat_client_Synchonys
+#' @return dat_client_Syncronys
 #' @importFrom readxl read_xlsx
 #' @import dplyr
 #' @import forcats
@@ -18,24 +18,24 @@
 #'
 #' @examples
 #' \dontrun{
-#' dd_read_client_Synchonys(
+#' dd_read_client_Syncronys(
 #'     fn_list           = NULL
-#'   , path_data         = "../Data_in/Client_Synchonys"
+#'   , path_data         = "../Data_in/Client_Syncronys"
 #'   , path_results_dat  = path_results_dat
 #'   , sw_plot_missing   = c(TRUE, FALSE)[1]
 #'   , sw_codebook       = c(TRUE, FALSE)[1]
 #'   )
 #' }
-dd_read_client_Synchonys <-
+dd_read_client_Syncronys <-
   function(
     fn_list           = NULL
-  , path_data         = "../Data_in/Client_Synchonys"
+  , path_data         = "../Data_in/Client_Syncronys"
   , path_results_dat  = NULL
   , sw_plot_missing   = c(TRUE, FALSE)[1]
   , sw_codebook       = c(TRUE, FALSE)[1]
   ) {
 
-  name_dat <- "dat_client_Synchonys"
+  name_dat <- "dat_client_Syncronys"
 
   dat_sheet <-
     erikmisc::e_read_data_subdir_into_lists(
@@ -116,7 +116,7 @@ dd_read_client_Synchonys <-
     }
   }
 
-  dat_client_Synchonys <-
+  dat_client_Syncronys <-
     dat_sheet |>
     dplyr::bind_rows() |>
     dplyr::select(
@@ -124,63 +124,70 @@ dd_read_client_Synchonys <-
     , -FILE__
     ) |>
     dplyr::rename(
-      Client_SSN            = MemberID
-    , Synchonys_CarrierID   = CarrierID
-    , Synchonys_MemberName  = MemberName
-    , Synchonys_DOB         = DOB
-    , Synchonys_Gender      = Gender
-    , Synchonys_Facility    = Facility
-    , Synchonys_AdmitDate   = AdmitDate
-    , Synchonys_AdmitReason = AdmitReason
-    , Synchonys_Type        = Type
-    , Synchonys_DischgDate  = DischgDate
-    , Synchonys_DischgDx    = DischgDx
-    , Synchonys_NumED30     = NumED30
-    , Synchonys_NumED365    = NumED365
-    , Synchonys_NumIP30     = NumIP30
-    , Synchonys_NumIP365    = NumIP365
-    , Synchonys_County      = County
-    , Synchonys_Region      = Region
+      Client_System_ID      = MemberID
+    , Syncronys_CarrierID   = CarrierID
+    , Syncronys_MemberName  = MemberName
+    , Syncronys_DOB         = DOB
+    , Syncronys_Gender      = Gender
+    , Syncronys_Facility    = Facility
+    , Syncronys_AdmitDate   = AdmitDate
+    , Syncronys_AdmitReason = AdmitReason
+    , Syncronys_Type        = Type
+    , Syncronys_DischgDate  = DischgDate
+    , Syncronys_DischgDx    = DischgDx
+    , Syncronys_NumED30     = NumED30
+    , Syncronys_NumED365    = NumED365
+    , Syncronys_NumIP30     = NumIP30
+    , Syncronys_NumIP365    = NumIP365
+    , Syncronys_County      = County
+    , Syncronys_Region      = Region
     ) |>
     dplyr::distinct() |>
     dplyr::mutate(
-      Synchonys_CarrierID     = Synchonys_CarrierID   |> factor()
-    #, Synchonys_MemberName    = Synchonys_MemberName
-    , Synchonys_DOB           = Synchonys_DOB         |> lubridate::as_date()
-    , Synchonys_Gender        = Synchonys_Gender      |> factor(levels = c("M", "F"))
+      Syncronys_CarrierID     = Syncronys_CarrierID   |> factor()
+    #, Syncronys_MemberName    = Syncronys_MemberName
+    , Syncronys_DOB           = Syncronys_DOB         |> lubridate::as_date()
+    , Syncronys_Gender        = Syncronys_Gender      |> factor(levels = c("M", "F"))
       # Replace n-tilde unicode
-    , Synchonys_Facility      = Synchonys_Facility    |> str_replace(pattern = "\xf1", replacement = "n")
-    , Synchonys_Facility      = Synchonys_Facility    |> str_replace(pattern = "\xb1", replacement = "n")
-    , Synchonys_Facility      = Synchonys_Facility    |> factor()
-    , Synchonys_AdmitDate     = Synchonys_AdmitDate   |> lubridate::as_date()
-    #, Synchonys_AdmitReason   = Synchonys_AdmitReason
-    , Synchonys_Type          = Synchonys_Type        |> factor()
-    , Synchonys_DischgDate    = Synchonys_DischgDate  |> lubridate::as_date()
-    , Synchonys_DischgDx      = Synchonys_DischgDx
-    #, Synchonys_NumED30       = Synchonys_NumED30
-    #, Synchonys_NumED365      = Synchonys_NumED365
-    #, Synchonys_NumIP30       = Synchonys_NumIP30
-    #, Synchonys_NumIP365      = Synchonys_NumIP365
-    , Synchonys_County        = Synchonys_County      |> factor()
-    , Synchonys_Region        = Synchonys_Region      |> factor()
-    , dat_client_Synchonys = TRUE
+    , Syncronys_Facility      = Syncronys_Facility    |> str_replace(pattern = "\xf1", replacement = "n")
+    , Syncronys_Facility      = Syncronys_Facility    |> str_replace(pattern = "\xb1", replacement = "n")
+    , Syncronys_Facility      = Syncronys_Facility    |> factor()
+    , Syncronys_AdmitDate     = Syncronys_AdmitDate   |> lubridate::as_date()
+    #, Syncronys_AdmitReason   = Syncronys_AdmitReason
+    , Syncronys_Type          = Syncronys_Type        |> factor()
+    , Syncronys_DischgDate    = Syncronys_DischgDate  |> lubridate::as_date()
+    , Syncronys_DischgDx      = Syncronys_DischgDx
+    #, Syncronys_NumED30       = Syncronys_NumED30
+    #, Syncronys_NumED365      = Syncronys_NumED365
+    #, Syncronys_NumIP30       = Syncronys_NumIP30
+    #, Syncronys_NumIP365      = Syncronys_NumIP365
+    , Syncronys_County        = Syncronys_County      |> factor()
+    , Syncronys_Region        = Syncronys_Region      |> factor()
+    , Date                    = Syncronys_AdmitDate
+    , dat_client_Syncronys = TRUE
     ) |>
     dplyr::relocate(
-      Client_SSN
+      Client_System_ID
+    , Date
+    ) |>
+    dplyr::arrange(
+      Client_System_ID
+    , Date
     )
 
-  #dat_client_Synchonys |> str()
+  #dat_client_Syncronys |> str()
 
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_client_Synchonys
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
-        dat_this         = dat_client_Synchonys
+    dd_plot_missing_codebook(
+        dat_this         = dat_client_Syncronys
       , name_dat         = name_dat
       , path_results_dat = path_results_dat
       #, sw_width         = 10
@@ -189,6 +196,6 @@ dd_read_client_Synchonys <-
       )
   }
 
-  return(dat_client_Synchonys)
+  return(dat_client_Syncronys)
 
-} # dd_read_client_Synchonys
+} # dd_read_client_Syncronys

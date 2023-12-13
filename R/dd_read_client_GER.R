@@ -269,6 +269,7 @@ dd_read_client_GER <-
     #, GER_Event_Subtype            = GER_Event_Subtype            |> as.character()
     , GER_Altercation                = GER_Altercation                |> factor()
     , GER_Individual_Involvement   = GER_Individual_Involvement   |> factor()
+    , Date                         = GER_Event_Date
     , dat_client_GER = TRUE
     ) |>
     # some IDs are SSN, need to parse bad characters
@@ -293,7 +294,8 @@ dd_read_client_GER <-
     , Client_SSN =
         Client_SSN |>
         stringr::str_replace_all(pattern = stringr::fixed("-"), replacement = "") |>
-        stringr::str_sub(start = -9)
+        stringr::str_sub(start = -9) |>
+        as.numeric()
     ) |>
     # Replace "N/A" values
     dplyr::mutate(
@@ -313,20 +315,21 @@ dd_read_client_GER <-
     dplyr::relocate(
       Client_TherapID
     , Client_SSN
+    , Date
     )
 
   #dat_client_GER |> str()
 
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_client_GER
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
-
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_client_GER
       , name_dat         = name_dat
       , path_results_dat = path_results_dat

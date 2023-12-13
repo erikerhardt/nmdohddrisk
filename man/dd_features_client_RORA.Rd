@@ -4,10 +4,15 @@
 \alias{dd_features_client_RORA}
 \title{Features for Client RORA}
 \usage{
-dd_features_client_RORA(dat_client_RORA = NULL)
+dd_features_client_RORA(
+  dat_client_RORA = NULL,
+  dat_client_Match = dat_client_Match
+)
 }
 \arguments{
 \item{dat_client_RORA}{dat_client_RORA data from \code{dd_read_client_RORA()}}
+
+\item{dat_client_Match}{dat_client_Match data from \code{dd_read_client_Match()}}
 }
 \value{
 dat_client_RORA

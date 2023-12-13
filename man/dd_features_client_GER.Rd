@@ -4,10 +4,15 @@
 \alias{dd_features_client_GER}
 \title{Features for Client GER}
 \usage{
-dd_features_client_GER(dat_client_GER = NULL)
+dd_features_client_GER(
+  dat_client_GER = NULL,
+  dat_client_Match = dat_client_Match
+)
 }
 \arguments{
 \item{dat_client_GER}{dat_client_GER data from \code{dd_read_client_GER()}}
+
+\item{dat_client_Match}{dat_client_Match data from \code{dd_read_client_Match()}}
 }
 \value{
 dat_client_GER

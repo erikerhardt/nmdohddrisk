@@ -1,6 +1,7 @@
 #' Features for Client IMB_ANE
 #'
 #' @param dat_client_IMB_ANE    dat_client_IMB_ANE data from \code{dd_read_client_IMB_ANE()}
+#' @param dat_client_Match      dat_client_Match data from \code{dd_read_client_Match()}
 #'
 #' @return dat_client_IMB_ANE
 #' @import dplyr
@@ -19,7 +20,8 @@
 #' }
 dd_features_client_IMB_ANE <-
   function(
-    dat_client_IMB_ANE    = NULL
+    dat_client_IMB_ANE  = NULL
+  , dat_client_Match    = dat_client_Match
   ) {
 
   # dat_client_IMB_ANE |> print(width=Inf)
@@ -74,6 +76,43 @@ dd_features_client_IMB_ANE <-
       tidyselect::starts_with("ANE_Substantiated_")
     , .after = "ANE_Substantiated"
     )
+
+  # Match Client_System_ID
+  dat_client_IMB_ANE <-
+    dat_client_IMB_ANE |>
+    dplyr::left_join(
+      dat_client_Match |>
+      dplyr::select(
+        Client_System_ID
+      , Client_SSN
+      )
+    , by = dplyr::join_by(Client_SSN)
+    ) |>
+    dplyr::select(
+      -Client_SSN
+    ) |>
+    dplyr::relocate(
+      Client_System_ID
+    ) |>
+    dplyr::arrange(
+      Client_System_ID
+    , Date
+    )
+
+  # 10/31/2023
+  # Simple, just unique dates Substantiated or not
+  dat_client_IMB_ANE <-
+    dat_client_IMB_ANE |>
+    dplyr::select(
+      Client_System_ID
+    , Date
+    , ANE_Substantiated
+    ) |>
+    dplyr::arrange(
+      Client_System_ID
+    , Date
+    ) |>
+    dplyr::distinct()
 
   return(dat_client_IMB_ANE)
 

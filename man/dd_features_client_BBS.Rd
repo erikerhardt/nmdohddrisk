@@ -4,10 +4,15 @@
 \alias{dd_features_client_BBS}
 \title{Features for Client BBS}
 \usage{
-dd_features_client_BBS(dat_client_BBS = NULL)
+dd_features_client_BBS(
+  dat_client_BBS = NULL,
+  dat_client_Match = dat_client_Match
+)
 }
 \arguments{
 \item{dat_client_BBS}{dat_client_BBS data from \code{dd_read_client_BBS()}}
+
+\item{dat_client_Match}{dat_client_Match data from \code{dd_read_client_Match()}}
 }
 \value{
 dat_client_BBS

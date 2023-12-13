@@ -85,16 +85,16 @@ dd_read_client_BBS <-
     , dat_client_BBS = TRUE
     )
 
-
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_client_BBS
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_client_BBS
       , name_dat         = name_dat
       , path_results_dat = path_results_dat

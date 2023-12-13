@@ -4,10 +4,15 @@
 \alias{dd_features_client_IMB_ANE}
 \title{Features for Client IMB_ANE}
 \usage{
-dd_features_client_IMB_ANE(dat_client_IMB_ANE = NULL)
+dd_features_client_IMB_ANE(
+  dat_client_IMB_ANE = NULL,
+  dat_client_Match = dat_client_Match
+)
 }
 \arguments{
 \item{dat_client_IMB_ANE}{dat_client_IMB_ANE data from \code{dd_read_client_IMB_ANE()}}
+
+\item{dat_client_Match}{dat_client_Match data from \code{dd_read_client_Match()}}
 }
 \value{
 dat_client_IMB_ANE

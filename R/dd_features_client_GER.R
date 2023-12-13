@@ -1,6 +1,7 @@
 #' Features for Client GER
 #'
-#' @param dat_client_GER    dat_client_GER data from \code{dd_read_client_GER()}
+#' @param dat_client_GER      dat_client_GER data from \code{dd_read_client_GER()}
+#' @param dat_client_Match    dat_client_Match data from \code{dd_read_client_Match()}
 #'
 #' @return dat_client_GER
 #' @import dplyr
@@ -20,6 +21,7 @@
 dd_features_client_GER <-
   function(
     dat_client_GER    = NULL
+  , dat_client_Match  = dat_client_Match
   ) {
 
   ## Risk_Prediction_Model/Documentation/GER_Power Query Filter Downs for At Risk GER to Model.rtf
@@ -148,6 +150,54 @@ dd_features_client_GER <-
         GER_AtRisk_Hospitalization          +
         GER_AtRisk_Suicide_Related_Behavior +
         GER_AtRisk_PRN_Psych_Use
+    )
+
+  # Match Client_System_ID
+  dat_client_GER <-
+    # GER, split and join with Match
+    dplyr::bind_rows(
+      # Match with Client_TherapID
+      dat_client_GER |>
+      dplyr::filter(
+        !is.na(Client_TherapID)
+      ) |>
+      dplyr::select(
+        -Client_SSN
+      ) |>
+      dplyr::left_join(
+        dat_client_Match |>
+        dplyr::select(
+          Client_System_ID
+        , Client_TherapID
+        )
+      , by = dplyr::join_by(Client_TherapID)
+      )
+      # Match with Client_SSN
+    , dat_client_GER |>
+      dplyr::filter(
+        !is.na(Client_SSN)
+      ) |>
+      dplyr::select(
+        -Client_TherapID
+      ) |>
+      dplyr::left_join(
+        dat_client_Match |>
+        dplyr::select(
+          Client_System_ID
+        , Client_SSN
+        )
+      , by = dplyr::join_by(Client_SSN)
+      )
+    ) |>
+    dplyr::select(
+      -Client_SSN
+    , -Client_TherapID
+    ) |>
+    dplyr::relocate(
+      Client_System_ID
+    ) |>
+    dplyr::arrange(
+      Client_System_ID
     )
 
   return(dat_client_GER)

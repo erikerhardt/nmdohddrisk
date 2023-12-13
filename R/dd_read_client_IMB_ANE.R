@@ -62,6 +62,8 @@ dd_read_client_IMB_ANE <-
       , SexualAbAlleg          = SexualAbAlleg          |> as.numeric()
       , AbuseAddedByDHI_19     = AbuseAddedByDHI_19     |> as.numeric()
       , NeglectAddedByDHI_20   = NeglectAddedByDHI_20   |> as.numeric()
+      , ClosureDate            = ClosureDate            |> lubridate::as_date()
+      , DateCPAP               = DateCPAP               |> lubridate::as_date()
       )
   }
 
@@ -206,12 +208,12 @@ dd_read_client_IMB_ANE <-
           !is.na(ANE_DateCPAP) ~ 1
         ,  is.na(ANE_DateCPAP) ~ 0
         )
+    , Date                  = ANE_IncidentDate
     , dat_client_IMB_ANE = TRUE
     ) |>
     dplyr::relocate(
       Client_SSN
-    , ANE_IncidentDate
-    , ANE_ClosureDate
+    , Date
     , ANE_Substantiated
     , ANE_DateCPAP
     , ANE_Severity
@@ -221,15 +223,16 @@ dd_read_client_IMB_ANE <-
   #dat_client_IMB_ANE |> str()
 
 
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_client_IMB_ANE
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_client_IMB_ANE
       , name_dat         = name_dat
       , path_results_dat = path_results_dat

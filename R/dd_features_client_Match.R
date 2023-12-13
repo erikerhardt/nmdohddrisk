@@ -19,13 +19,19 @@
 #' }
 dd_features_client_Match <-
   function(
-    dat_client_Match    = NULL
+    dat_client_Match  = NULL
   ) {
 
   dat_client_Match <-
     dat_client_Match |>
-    dplyr::mutate(
-
+    #dplyr::mutate(
+    #)
+    # Match Client_System_ID
+    dplyr::relocate(
+      Client_System_ID
+    ) |>
+    dplyr::arrange(
+      Client_System_ID
     )
 
   return(dat_client_Match)

@@ -138,7 +138,7 @@ dd_read_client_RORA <-
   }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_client_RORA
       , name_dat         = name_dat
       , path_results_dat = path_results_dat

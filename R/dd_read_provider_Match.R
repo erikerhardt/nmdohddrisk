@@ -105,16 +105,16 @@ dd_read_provider_Match <-
 
   #dat_provider_Match |> str()
 
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_provider_Match
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
-
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_provider_Match
       , name_dat         = name_dat
       , path_results_dat = path_results_dat

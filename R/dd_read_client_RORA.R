@@ -60,6 +60,7 @@ dd_read_client_RORA <-
       dat_sheet[[ i_sheet ]] |>
       dplyr::mutate(
         PrimaryProviderID    = PrimaryProviderID    |> as.character()
+      , SystemConcernID      = SystemConcernID      |> as.character()
       )
   }
 
@@ -135,14 +136,14 @@ dd_read_client_RORA <-
       C_RORA_SystemConcernID    = ifelse(C_RORA_SystemConcernID == "N/A", NA, C_RORA_SystemConcernID)
     , C_RORA_Waiver             = C_RORA_Waiver |> factor()
     , C_RORA_Region             = C_RORA_Region |>
-                                stringr::str_replace(pattern = "RO$", replacement = "")      |>
-                                stringr::str_replace(pattern = "^M$", replacement = "Metro") |>
-                                factor(levels = c("Metro", "NE", "NW", "SE", "SW", "NA"))
+                                  stringr::str_replace(pattern = "RO$", replacement = "")      |>
+                                  stringr::str_replace(pattern = "^M$", replacement = "Metro") |>
+                                  factor(levels = c("Metro", "NE", "NW", "SE", "SW", "NA"))
     , C_RORA_RequestDate        = C_RORA_RequestDate |> lubridate::mdy()
     , C_RORA_ClosedDate         = C_RORA_ClosedDate  |> lubridate::mdy()
-    , Client_SSN              = Client_SSN |>
-                                stringr::str_replace_all(pattern = "-", replacement = "") |>
-                                as.numeric()
+    , Client_SSN                = Client_SSN |>
+                                  stringr::str_replace_all(pattern = "-", replacement = "") |>
+                                  as.numeric()
     , C_RORA_Primary_Concern    = C_RORA_Primary_Concern   |> factor()
     , C_RORA_Secondary_Concern  = C_RORA_Secondary_Concern |> factor()
     , C_RORA_Detailed_Concern   = C_RORA_Detailed_Concern  |> factor()
@@ -152,36 +153,38 @@ dd_read_client_RORA <-
     #, C_RORA_Agency            = C_RORA_Agency     |> factor()
     , C_RORA_Care_or_Compliance = C_RORA_Care_or_Compliance |> factor()
     , C_RORA_Risk               = C_RORA_Risk |>
-                                forcats::fct_collapse(
-                                  "Priority 1 (high)" =
-                                    c(
-                                      "Emergency"
-                                    , "Priority 1"
-                                    )
-                                  , "Priority 2 (low)" =
-                                    c(
-                                      "Priority 2"
-                                    )
-                                ) |>
-                                factor()
+                                  forcats::fct_collapse(
+                                    "Priority 1 (high)" =
+                                      c(
+                                        "Emergency"
+                                      , "Priority 1"
+                                      )
+                                    , "Priority 2 (low)" =
+                                      c(
+                                        "Priority 2"
+                                      )
+                                  ) |>
+                                  factor()
+    , Date                      = C_RORA_RequestDate
     , dat_client_RORA = TRUE
     ) |>
     dplyr::relocate(
       Client_SSN
+    , Date
     )
 
   #dat_client_RORA |> str()
 
-
-  if (!is.null(path_results_dat)) {
-    save(
-        dat_client_RORA
-      , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
-      )
-  }
+  name_dat |> dd_save_to_RData()
+  # if (!is.null(path_results_dat)) {
+  #   save(
+  #     list = ls(pattern = name_dat)
+  #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  #   )
+  # }
 
   if (sw_plot_missing) {
-    nmdohddrisk::dd_plot_missing_codebook(
+    dd_plot_missing_codebook(
         dat_this         = dat_client_RORA
       , name_dat         = name_dat
       , path_results_dat = path_results_dat
