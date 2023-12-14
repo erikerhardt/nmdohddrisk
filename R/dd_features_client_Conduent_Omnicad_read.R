@@ -16,6 +16,7 @@ dd_features_client_Conduent_Omnicad_read <-
   function(
     dat_client_Conduent_Omnicad  = NULL
   ) {
+  ## dat_client_Conduent_Omnicad = dplyr::left_join(dat_this_header, dat_this_line, by = dplyr::join_by(TCN))
 
   dat_client_Conduent_Omnicad <-
     dat_client_Conduent_Omnicad |>
@@ -238,6 +239,9 @@ dd_features_client_Conduent_Omnicad_read <-
     #, Line_Pd_Units
     #, Line_Proc_Code_Mod1
     #, Line_Proc_Code_Mod2
+    , Conduent_Omnicad_Line_Billed_Amt
+    , Conduent_Omnicad_Line_Pd_Amt
+    , Conduent_Omnicad_Diff_Amt
     #, Conduent_Omnicad_H2019
     #, Conduent_Omnicad_T1023
     #, Conduent_Omnicad_T2034_HB
@@ -283,6 +287,9 @@ dd_features_client_Conduent_Omnicad_read <-
     , Conduent_Omnicad_Respite_Living_Supports     = Conduent_Omnicad_Respite_Living_Supports     |> sum()
     , Conduent_Omnicad_Nursing                     = Conduent_Omnicad_Nursing                     |> sum()
     , Conduent_Omnicad_BSS_RLS_N_ALL               = Conduent_Omnicad_BSS_RLS_N_ALL               |> sum()
+    , Conduent_Omnicad_Line_Billed_Amt             = Conduent_Omnicad_Line_Billed_Amt             |> sum()
+    , Conduent_Omnicad_Line_Pd_Amt                 = Conduent_Omnicad_Line_Pd_Amt                 |> sum()
+    , Conduent_Omnicad_Diff_Amt                    = Conduent_Omnicad_Diff_Amt                    |> sum()
     ) |>
     dplyr::ungroup()
 

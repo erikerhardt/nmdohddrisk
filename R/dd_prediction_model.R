@@ -188,7 +188,7 @@ dd_prediction_model <-
     , rf_id_var       = "Client_System_ID"
     , sw_rfsrc_ntree  = sw_rfsrc_ntree
     , sw_alpha        = sw_alpha
-    , sw_save_model   = c(TRUE, FALSE)[1]
+    , sw_save_model   = c(TRUE, FALSE)[2]
     , plot_title      = name_analysis
     , out_path        = file.path(path_results_out, path_prefix_out)
     , file_prefix     = path_prefix_out

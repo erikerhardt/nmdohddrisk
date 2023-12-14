@@ -314,9 +314,17 @@ dd_read_client_Conduent_Omnicad <-
         , Line_Pd_Units
         , Line_Proc_Code_Mod1
         , Line_Proc_Code_Mod2
+        , Line_Billed_Amt
+        #, Line_Allowed_Chrg_Amt
+        , Line_Pd_Amt
+        ) |>
+        dplyr::rename(
+          Conduent_Omnicad_Line_Billed_Amt = Line_Billed_Amt
+        , Conduent_Omnicad_Line_Pd_Amt     = Line_Pd_Amt
         ) |>
         dplyr::mutate(
-          Line_Svc_Date_First = Line_Svc_Date_First |> lubridate::as_date()
+          Line_Svc_Date_First       = Line_Svc_Date_First |> lubridate::as_date()
+        , Conduent_Omnicad_Diff_Amt = Conduent_Omnicad_Line_Pd_Amt - Conduent_Omnicad_Line_Billed_Amt
         )
     }
     dat_this_line <-

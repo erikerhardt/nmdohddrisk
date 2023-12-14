@@ -904,6 +904,16 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       , Conduent_Omnicad_Respite_Living_Supports     = Conduent_Omnicad_Respite_Living_Supports     |> sum(na.rm = TRUE)
       , Conduent_Omnicad_Nursing                     = Conduent_Omnicad_Nursing                     |> sum(na.rm = TRUE)
       , Conduent_Omnicad_BSS_RLS_N_ALL               = Conduent_Omnicad_BSS_RLS_N_ALL               |> sum(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Billed_Amt_Sum         = Conduent_Omnicad_Line_Billed_Amt             |> sum(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Pd_Amt_Sum             = Conduent_Omnicad_Line_Pd_Amt                 |> sum(na.rm = TRUE)
+      , Conduent_Omnicad_Diff_Amt_Sum                = Conduent_Omnicad_Diff_Amt                    |> sum(na.rm = TRUE)
+      , Conduent_Omnicad_Diff_Amt_Sum_Abs            = Conduent_Omnicad_Diff_Amt                    |> abs() |> sum(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Billed_Amt_Var         = Conduent_Omnicad_Line_Billed_Amt             |> var(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Pd_Amt_Var             = Conduent_Omnicad_Line_Pd_Amt                 |> var(na.rm = TRUE)
+      , Conduent_Omnicad_Diff_Amt_Var                = Conduent_Omnicad_Diff_Amt                    |> var(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Billed_Amt_Skew        = Conduent_Omnicad_Line_Billed_Amt             |> moments::skewness(na.rm = TRUE)
+      , Conduent_Omnicad_Line_Pd_Amt_Skew            = Conduent_Omnicad_Line_Pd_Amt                 |> moments::skewness(na.rm = TRUE)
+      , Conduent_Omnicad_Diff_Amt_Skew               = Conduent_Omnicad_Diff_Amt                    |> moments::skewness(na.rm = TRUE)
       , Last_Date           = Last_Date           |> first()
       ) |>
       dplyr::ungroup() |>
@@ -916,6 +926,12 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
           , TRUE                      ~ ANE_Substantiated
           ) |>
           factor(levels = c(0, 1), labels = c("No", "Yes"))
+      , Conduent_Omnicad_Line_Billed_Amt_Var         = ifelse(is.nan(Conduent_Omnicad_Line_Billed_Amt_Var   ), 0, Conduent_Omnicad_Line_Billed_Amt_Var   )
+      , Conduent_Omnicad_Line_Pd_Amt_Var             = ifelse(is.nan(Conduent_Omnicad_Line_Pd_Amt_Var       ), 0, Conduent_Omnicad_Line_Pd_Amt_Var       )
+      , Conduent_Omnicad_Diff_Amt_Var                = ifelse(is.nan(Conduent_Omnicad_Diff_Amt_Var          ), 0, Conduent_Omnicad_Diff_Amt_Var          )
+      , Conduent_Omnicad_Line_Billed_Amt_Skew        = ifelse(is.nan(Conduent_Omnicad_Line_Billed_Amt_Skew  ), 0, Conduent_Omnicad_Line_Billed_Amt_Skew  )
+      , Conduent_Omnicad_Line_Pd_Amt_Skew            = ifelse(is.nan(Conduent_Omnicad_Line_Pd_Amt_Skew      ), 0, Conduent_Omnicad_Line_Pd_Amt_Skew      )
+      , Conduent_Omnicad_Diff_Amt_Skew               = ifelse(is.nan(Conduent_Omnicad_Diff_Amt_Skew         ), 0, Conduent_Omnicad_Diff_Amt_Skew         )
       ) |>
       dplyr::select(
         Client_System_ID
@@ -933,6 +949,16 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       , Conduent_Omnicad_Respite_Living_Supports
       , Conduent_Omnicad_Nursing
       , Conduent_Omnicad_BSS_RLS_N_ALL
+      , Conduent_Omnicad_Line_Billed_Amt_Sum
+      , Conduent_Omnicad_Line_Pd_Amt_Sum
+      , Conduent_Omnicad_Diff_Amt_Sum
+      , Conduent_Omnicad_Diff_Amt_Sum_Abs
+      , Conduent_Omnicad_Line_Billed_Amt_Var
+      , Conduent_Omnicad_Line_Pd_Amt_Var
+      , Conduent_Omnicad_Diff_Amt_Var
+      , Conduent_Omnicad_Line_Billed_Amt_Skew
+      , Conduent_Omnicad_Line_Pd_Amt_Skew
+      , Conduent_Omnicad_Diff_Amt_Skew
       , Age
       #, Last_Date
       ) |>
