@@ -60,6 +60,7 @@ dd_read_provider_RORA <-
       dat_sheet[[ i_sheet ]] |>
       dplyr::mutate(
         PrimaryProviderID    = PrimaryProviderID    |> as.character()
+      , SystemConcernID      = SystemConcernID      |> as.character()
       )
   }
 

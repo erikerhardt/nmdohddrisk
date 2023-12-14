@@ -16,6 +16,7 @@
 #' @import tidyr
 #' @import tidyselect
 #' @import parallel
+#' @import tsne
 #' @export
 #'
 #' @examples
@@ -192,6 +193,7 @@ dd_prediction_model <-
     , out_path        = file.path(path_results_out, path_prefix_out)
     , file_prefix     = path_prefix_out
     , plot_format     = c("png", "pdf")[1]
+    , n_marginal_plot_across = 6
     )
 
 
@@ -264,7 +266,7 @@ dd_prediction_model <-
   #out_e_rf_Model_DD_Predict$predicted
   #out_e_rf_Model_DD_Predict$class
 
-  dat_all_Model_ID_Predict_out <-
+  dat_all_Model_ID_Predict_out_all <-
     dat_all_Model_ID_Predict |>
     dplyr::bind_cols(
       dplyr::bind_cols(
@@ -294,10 +296,20 @@ dd_prediction_model <-
     , Class
     , .after = Client_System_ID
     ) |>
+    dplyr::left_join(
+      out_e_rf_Model_DD_Train$o_class_sel_ROC$roc_curve$Yes |>
+      dplyr::select(
+        Sens
+      , Spec
+      , thresh
+      ) |>
+      dplyr::rename(
+        Probability_ANE = thresh
+      )
+    , by = join_by(Probability_ANE)
+    ) |>
     dplyr::select(
-      Client_System_ID
-    , Probability_ANE
-    , Class
+      -tidyselect::any_of("Client_Waiver")
     ) |>
     dplyr::left_join(
       dat_client_Match |>
@@ -305,11 +317,54 @@ dd_prediction_model <-
         Client_System_ID
       , Client_SSN
       , Client_Waiver
-      , Client_Region
+      #, Client_Region
       , Client_County
-      #  Add street address
+      # XXX Add street address
       )
     , by = dplyr::join_by(Client_System_ID)
+    )
+
+  dat_all_Model_ID_Predict_out <-
+    dat_all_Model_ID_Predict_out_all |>
+    dplyr::select(
+      Client_System_ID
+    , Probability_ANE
+    , Class
+    , Sens
+    , Spec
+    , Client_SSN
+    , Client_Waiver
+    , Client_County
+    )
+
+
+  save(
+      dat_all_Model_ID_Predict_out_all
+    , file =
+        file.path(
+          path_results_out
+        , path_prefix_out
+        , paste0(
+            path_prefix_out
+          , "__"
+          , "dat_all_Model_ID_Predict_out_all"
+          , ".RData"
+          )
+        )
+    )
+  readr::write_csv(
+      dat_all_Model_ID_Predict_out_all
+    , file =
+        file.path(
+          path_results_out
+        , path_prefix_out
+        , paste0(
+            path_prefix_out
+          , "__"
+          , "dat_all_Model_ID_Predict_out_all"
+          , ".csv"
+          )
+        )
     )
 
   readr::write_csv(
@@ -326,6 +381,7 @@ dd_prediction_model <-
           )
         )
     )
+
 
 
   dat_all_Model_ID_Predict_out_plot <-
@@ -391,6 +447,101 @@ dd_prediction_model <-
     #, units  = "in"
     #, useDingbats = FALSE
     )
+
+
+
+  # # t-SNE plot
+  # ind_sample <-
+  #   seq(1, nrow(dat_all_Model_ID_Predict_out_all), length.out = 500) |>
+  #   round()
+  #
+  # out_tsne <-
+  #   tsne::tsne(
+  #     X =
+  #       dat_all_Model_ID_Predict_out_all |>
+  #       dplyr::arrange(
+  #         dplyr::desc(Probability_ANE)
+  #       ) |>
+  #       dplyr::slice(
+  #         ind_sample
+  #       ) |>
+  #       dplyr::select(
+  #         -Client_System_ID
+  #       , -Probability_ANE
+  #       , -Class
+  #       , -No
+  #       , -Sens
+  #       , -Spec
+  #       , -Client_SSN
+  #       , -Client_County
+  #       ) |>
+  #       dplyr::mutate(across(where(is.factor), as.numeric)) |>
+  #       as.matrix()
+  #   , initial_config = NULL
+  #   , k = 2
+  #   , initial_dims = 30
+  #   , perplexity = 30
+  #   , max_iter = 1000
+  #   , min_cost = 0
+  #   , epoch_callback = NULL
+  #   , whiten = TRUE
+  #   , epoch=100
+  #   )
+  # colnames(out_tsne) <- c("X1", "X2")
+  #
+  # dat_tsne <-
+  #   out_tsne |>
+  #   tibble::as_tibble(.name_repair = "universal") |>
+  #   dplyr::bind_cols(
+  #     dat_all_Model_ID_Predict_out_all |>
+  #     dplyr::slice(
+  #       ind_sample
+  #     )
+  #   )
+  #
+  # p <- ggplot(dat_tsne, aes(x = X1, y = X2, shape = Class, color = Probability_ANE))
+  # p <- p + theme_bw()
+  # p <- p + geom_hline(aes(yintercept = 0), colour = "black", linetype = c("none", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash")[2], linewidth = 0.3, alpha = 0.5)
+  # p <- p + geom_vline(aes(xintercept = 0), colour = "black", linetype = c("none", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash")[2], linewidth = 0.3, alpha = 0.5)
+  # p <- p + geom_point(alpha = 1/2)
+  # p <- p + labs(
+  #                 title     = name_analysis
+  #               , subtitle  = "t-SNE projection"
+  #               #, x         = "x"
+  #               #, y         = "y"
+  #               #, caption = paste0(  "Caption 1"
+  #               #                  , "\nCaption 2"
+  #               #                  )
+  #               #, colour    = "Class"
+  #               #, shape     = "Class"
+  #               #, linetype  = "General Health"  #"Diagnosis"
+  #               #, fill      = "Diagnosis"
+  #               #, tag = "A"
+  #               )
+  # print(p)
+  #
+  # ggsave(
+  #       file.path(
+  #         path_results_out
+  #       , path_prefix_out
+  #       , paste0(
+  #           path_prefix_out
+  #         , "__"
+  #         , "plot_predictions_tsne"
+  #         , ".png"
+  #         )
+  #       )
+  #   , plot   = p
+  #   , width  = 10
+  #   , height = 10
+  #   ## png, jpeg
+  #   , dpi    = 300
+  #   , bg     = "white"
+  #   ## pdf
+  #   #, units  = "in"
+  #   #, useDingbats = FALSE
+  #   )
+
 
   setwd(dir_old)
 
