@@ -1,6 +1,6 @@
 #' Read Client Matching ID files
 #'
-#' @param fn_list           list of files to read
+#' @param fn_list           files to read or \code{NULL} for most recent by filename
 #' @param path_data         path to data
 #' @param path_results_dat  path to write .RData file
 #' @param sw_plot_missing   T/F plot missing values
@@ -20,9 +20,7 @@
 #' @examples
 #' \dontrun{
 #' dd_read_client_Match(
-#'     fn_list           = c(
-#'                           "Client.information.9.6.23 Therap ID Added.xlsx"
-#'                         )
+#'     fn_list           = NULL
 #'   , path_data         = "../Data_in/Client_Matching"
 #'   , path_results_dat  = path_results_dat
 #'   , sw_plot_missing   = c(TRUE, FALSE)[1]
@@ -31,9 +29,7 @@
 #' }
 dd_read_client_Match <-
   function(
-    fn_list           = c(
-                          "Client.information.9.6.23 Therap ID Added.xlsx"
-                        )
+    fn_list           = NULL
   , path_data         = "../Data_in/Client_Matching"
   , path_results_dat  = NULL
   , sw_plot_missing   = c(TRUE, FALSE)[1]
@@ -42,9 +38,17 @@ dd_read_client_Match <-
 
   name_dat <- "dat_client_Match"
 
+  if ( is.null(fn_list) ) {
+    fn_list <-
+      e_file_first_last(name = NULL, path = path_data)
+  } else {
+    fn_list <-
+      file.path(path_data, fn_list)
+  }
+
   dat_sheet <-
     readxl::read_xlsx(
-      file.path(path_data, fn_list)
+      path      = fn_list
     , guess_max = 1e5
     , na        = "N/A"
     ) |>

@@ -5,7 +5,7 @@
 \title{Read Client Matching ID files}
 \usage{
 dd_read_client_Match(
-  fn_list = c("Client.information.9.6.23 Therap ID Added.xlsx"),
+  fn_list = NULL,
   path_data = "../Data_in/Client_Matching",
   path_results_dat = NULL,
   sw_plot_missing = c(TRUE, FALSE)[1],
@@ -13,7 +13,7 @@ dd_read_client_Match(
 )
 }
 \arguments{
-\item{fn_list}{list of files to read}
+\item{fn_list}{files to read or \code{NULL} for most recent by filename}
 
 \item{path_data}{path to data}
 
@@ -32,9 +32,7 @@ Read Client Matching ID files
 \examples{
 \dontrun{
 dd_read_client_Match(
-    fn_list           = c(
-                          "Client.information.9.6.23 Therap ID Added.xlsx"
-                        )
+    fn_list           = NULL
   , path_data         = "../Data_in/Client_Matching"
   , path_results_dat  = path_results_dat
   , sw_plot_missing   = c(TRUE, FALSE)[1]
