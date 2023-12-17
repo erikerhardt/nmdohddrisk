@@ -175,6 +175,47 @@ dd_prediction_model <-
   }
 
 
+  # Projection plot
+  p_proj <-
+    e_plot_projection(
+      dat_plot                  =
+        dat_all_Model_ID_Train |>
+        dplyr::select(
+        , -Client_System_ID
+        )
+    , var_group                 = "ANE_Substantiated"
+    , var_color                 = NULL
+    , var_shape                 = NULL
+    , var_facet                 = NULL #"Client_Waiver"
+    , text_title                = paste0("ANE Substantiated: ", name_analysis)
+    , sw_print                  = FALSE
+    , sw_projection             = c("umap", "tsne")[1]
+    , n_obs_sample              = NULL
+    )
+
+  ggsave(
+        file.path(
+          path_results_out
+        , path_prefix_out
+        , paste0(
+            path_prefix_out
+          , "__"
+          , "plot_projection_train"
+          , ".png"
+          )
+        )
+    , plot   = p_proj
+    , width  = 10
+    , height = 10
+    ## png, jpeg
+    , dpi    = 300
+    , bg     = "white"
+    ## pdf
+    #, units  = "in"
+    #, useDingbats = FALSE
+    )
+
+
   #dat_all_Model_ID_Train
   #dat_all_Model_ID_Train |> str()
   #dat_all_Model_ID_Train |> summary()
@@ -448,99 +489,47 @@ dd_prediction_model <-
     #, useDingbats = FALSE
     )
 
+  # Projection plot
+  p_proj <-
+    e_plot_projection(
+      dat_plot                  =
+        dat_all_Model_ID_Predict_out_all |>
+        dplyr::select(
+          tidyselect::any_of(c("Class", names(dat_all_Model_ID_Train)))
+        , -Client_System_ID
+        )
+    , var_group                 = "Class"
+    , var_color                 = NULL
+    , var_shape                 = NULL
+    , var_facet                 = NULL #"Client_Waiver"
+    , text_title                = paste0("Classification: ", name_analysis)
+    , sw_print                  = FALSE
+    , sw_projection             = c("umap", "tsne")[1]
+    , n_obs_sample              = NULL
+    )
 
+  ggsave(
+        file.path(
+          path_results_out
+        , path_prefix_out
+        , paste0(
+            path_prefix_out
+          , "__"
+          , "plot_projection_class_sel"
+          , ".png"
+          )
+        )
+    , plot   = p_proj
+    , width  = 10
+    , height = 10
+    ## png, jpeg
+    , dpi    = 300
+    , bg     = "white"
+    ## pdf
+    #, units  = "in"
+    #, useDingbats = FALSE
+    )
 
-  # # t-SNE plot
-  # ind_sample <-
-  #   seq(1, nrow(dat_all_Model_ID_Predict_out_all), length.out = 500) |>
-  #   round()
-  #
-  # out_tsne <-
-  #   tsne::tsne(
-  #     X =
-  #       dat_all_Model_ID_Predict_out_all |>
-  #       dplyr::arrange(
-  #         dplyr::desc(Probability_ANE)
-  #       ) |>
-  #       dplyr::slice(
-  #         ind_sample
-  #       ) |>
-  #       dplyr::select(
-  #         -Client_System_ID
-  #       , -Probability_ANE
-  #       , -Class
-  #       , -No
-  #       , -Sens
-  #       , -Spec
-  #       , -Client_SSN
-  #       , -Client_County
-  #       ) |>
-  #       dplyr::mutate(across(where(is.factor), as.numeric)) |>
-  #       as.matrix()
-  #   , initial_config = NULL
-  #   , k = 2
-  #   , initial_dims = 30
-  #   , perplexity = 30
-  #   , max_iter = 1000
-  #   , min_cost = 0
-  #   , epoch_callback = NULL
-  #   , whiten = TRUE
-  #   , epoch=100
-  #   )
-  # colnames(out_tsne) <- c("X1", "X2")
-  #
-  # dat_tsne <-
-  #   out_tsne |>
-  #   tibble::as_tibble(.name_repair = "universal") |>
-  #   dplyr::bind_cols(
-  #     dat_all_Model_ID_Predict_out_all |>
-  #     dplyr::slice(
-  #       ind_sample
-  #     )
-  #   )
-  #
-  # p <- ggplot(dat_tsne, aes(x = X1, y = X2, shape = Class, color = Probability_ANE))
-  # p <- p + theme_bw()
-  # p <- p + geom_hline(aes(yintercept = 0), colour = "black", linetype = c("none", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash")[2], linewidth = 0.3, alpha = 0.5)
-  # p <- p + geom_vline(aes(xintercept = 0), colour = "black", linetype = c("none", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash")[2], linewidth = 0.3, alpha = 0.5)
-  # p <- p + geom_point(alpha = 1/2)
-  # p <- p + labs(
-  #                 title     = name_analysis
-  #               , subtitle  = "t-SNE projection"
-  #               #, x         = "x"
-  #               #, y         = "y"
-  #               #, caption = paste0(  "Caption 1"
-  #               #                  , "\nCaption 2"
-  #               #                  )
-  #               #, colour    = "Class"
-  #               #, shape     = "Class"
-  #               #, linetype  = "General Health"  #"Diagnosis"
-  #               #, fill      = "Diagnosis"
-  #               #, tag = "A"
-  #               )
-  # print(p)
-  #
-  # ggsave(
-  #       file.path(
-  #         path_results_out
-  #       , path_prefix_out
-  #       , paste0(
-  #           path_prefix_out
-  #         , "__"
-  #         , "plot_predictions_tsne"
-  #         , ".png"
-  #         )
-  #       )
-  #   , plot   = p
-  #   , width  = 10
-  #   , height = 10
-  #   ## png, jpeg
-  #   , dpi    = 300
-  #   , bg     = "white"
-  #   ## pdf
-  #   #, units  = "in"
-  #   #, useDingbats = FALSE
-  #   )
 
 
   setwd(dir_old)
