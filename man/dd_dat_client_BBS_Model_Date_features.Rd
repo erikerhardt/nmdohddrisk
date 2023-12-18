@@ -17,13 +17,11 @@ dd_dat_client_BBS_Model_Date_features(
 
 \item{dat_client_IMB_ANE_Model}{dat_client_IMB_ANE_Model}
 
+\item{dat_client_BBS_Model}{dat_client_BBS_Model}
+
 \item{date_Current}{date_Current}
 
 \item{sw_ANE_Current}{sw_ANE_Current}
-
-\item{dat_client_BBS_Model_Date}{dat_client_BBS_Model_Date}
-
-\item{m_months_BBS}{m_months_BBS}
 }
 \value{
 dat_client_BBS_Model_Date_features

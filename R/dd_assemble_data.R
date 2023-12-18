@@ -7,6 +7,7 @@
 #' @param dat_client_Match dat_client_Match
 #'
 #' @return dat_client_Match_Model
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Match_Model <-
@@ -41,6 +42,7 @@ dd_dat_client_Match_Model <-
 #' @param dat_client_IMB_ANE dat_client_IMB_ANE
 #'
 #' @return dat_client_IMB_ANE_Model
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_IMB_ANE_Model <-
@@ -80,6 +82,7 @@ dd_dat_client_IMB_ANE_Model <-
 #' @param dat_client_GER dat_client_GER
 #'
 #' @return dat_client_GER_Model
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_GER_Model <-
@@ -127,6 +130,7 @@ dd_dat_client_GER_Model <-
 #' @param dat_client_Syncronys dat_client_Syncronys
 #'
 #' @return dat_client_Syncronys_Model
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Syncronys_Model <-
@@ -158,6 +162,7 @@ dd_dat_client_Syncronys_Model <-
 #' @param dat_client_RORA dat_client_RORA
 #'
 #' @return dat_client_RORA_Model
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_RORA_Model <-
@@ -219,6 +224,7 @@ dd_dat_client_BBS_Model <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_GER_Model_Date
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_GER_Model_Date <-
@@ -276,6 +282,7 @@ dd_dat_client_GER_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_RORA_Model_Date
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_RORA_Model_Date <-
@@ -333,6 +340,7 @@ dd_dat_client_RORA_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_Syncronys_Model_Date
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Syncronys_Model_Date <-
@@ -391,6 +399,7 @@ dd_dat_client_Syncronys_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_Conduent_Omnicad_Model_Date
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Conduent_Omnicad_Model_Date <-
@@ -450,6 +459,8 @@ dd_dat_client_Conduent_Omnicad_Model_Date <-
 #' @param m_months_GER m_months_GER
 #'
 #' @return dat_client_GER_Model_Date_features_Model
+#' @importFrom lubridate duration
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_GER_Model_Date_features_Model <-
@@ -607,6 +618,8 @@ dd_dat_client_GER_Model_Date_features_Model <-
 #' @param m_months_RORA m_months_RORA
 #'
 #' @return dat_client_RORA_Model_Date_features
+#' @importFrom lubridate duration
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_RORA_Model_Date_features <-
@@ -736,12 +749,12 @@ dd_dat_client_RORA_Model_Date_features <-
 #'
 #' @param dat_client_Match_Model dat_client_Match_Model
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
-#' @param dat_client_BBS_Model_Date dat_client_BBS_Model_Date
+#' @param dat_client_BBS_Model dat_client_BBS_Model
 #' @param date_Current date_Current
 #' @param sw_ANE_Current sw_ANE_Current
-#' @param m_months_BBS m_months_BBS
 #'
 #' @return dat_client_BBS_Model_Date_features
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_BBS_Model_Date_features <-
@@ -829,6 +842,8 @@ dd_dat_client_BBS_Model_Date_features <-
 #' @param m_months_Syncronys m_months_Syncronys
 #'
 #' @return dat_client_Syncronys_Model_Date_features
+#' @importFrom lubridate duration
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Syncronys_Model_Date_features <-
@@ -951,6 +966,9 @@ dd_dat_client_Syncronys_Model_Date_features <-
 #' @param m_months_Conduent_Omnicad m_months_Conduent_Omnicad
 #'
 #' @return dat_client_Conduent_Omnicad_Model_Date_features
+#' @importFrom moments skewness
+#' @importFrom lubridate duration
+#' @import dplyr
 #' @export
 #'
 dd_dat_client_Conduent_Omnicad_Model_Date_features <-
@@ -1262,6 +1280,7 @@ dd_list_dat_each_Model_Date_features <-
 #' @param by_for_join by_for_join
 #'
 #' @return dat_all_Model_ID
+#' @import dplyr
 #' @export
 #'
 dd_dat_all_Model_ID <-
