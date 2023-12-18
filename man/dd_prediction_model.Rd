@@ -19,15 +19,25 @@ dd_prediction_model(
 )
 }
 \arguments{
-\item{fn_list}{NULL, no list of files to read (read all in the path)}
+\item{working_directory}{Working directory}
 
-\item{path_data}{path to data}
+\item{path_prefix_out}{Path and file prefix for output folders}
 
-\item{path_results_dat}{path to write .RData file}
+\item{DD_Group}{All or specific Waiver group}
 
-\item{sw_plot_missing}{T/F plot missing values}
+\item{date_Current}{Date for last day of data to use for analysis}
 
-\item{sw_codebook}{T/F generage codebook (only runs if \code{sw_plot_missing} is also \code{TRUE}}
+\item{m_months_GER}{GER       data, date range to keep, from first ANE or last observation back number of months}
+
+\item{m_months_Syncronys}{Syncronys data, date range to keep, from first ANE or last observation back number of months}
+
+\item{m_months_Conduent_Omnicad}{Omnicad   data, date range to keep, from first ANE or last observation back number of months}
+
+\item{m_months_RORA}{RORA      data, date range to keep, from first ANE or last observation back number of months}
+
+\item{sw_rfsrc_ntree}{Random forest, number of trees}
+
+\item{sw_alpha}{Random forest, model selection alpha level}
 }
 \value{
 dat_client_RORA

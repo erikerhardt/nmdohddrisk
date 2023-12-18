@@ -35,6 +35,8 @@ dd_list_dat_each_Model_Date_features(
 
 \item{dat_client_Conduent_Omnicad}{dat_client_Conduent_Omnicad}
 
+\item{dat_client_BBS}{dat_client_BBS}
+
 \item{date_Current}{date_Current}
 
 \item{m_months_GER}{m_months_GER}

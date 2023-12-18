@@ -966,6 +966,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
 #' @param m_months_Conduent_Omnicad m_months_Conduent_Omnicad
 #'
 #' @return dat_client_Conduent_Omnicad_Model_Date_features
+#' @importFrom stats var
 #' @importFrom moments skewness
 #' @importFrom lubridate duration
 #' @import dplyr
@@ -1119,6 +1120,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
 #' @param dat_client_Syncronys dat_client_Syncronys
 #' @param dat_client_RORA dat_client_RORA
 #' @param dat_client_Conduent_Omnicad dat_client_Conduent_Omnicad
+#' @param dat_client_BBS dat_client_BBS
 #' @param date_Current date_Current
 #' @param m_months_GER m_months_GER
 #' @param m_months_Syncronys m_months_Syncronys

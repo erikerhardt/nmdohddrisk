@@ -1,12 +1,18 @@
 #' NM DOH DD Prediction Model, main predict and model function
 #'
-#' @param fn_list           NULL, no list of files to read (read all in the path)
-#' @param path_data         path to data
-#' @param path_results_dat  path to write .RData file
-#' @param sw_plot_missing   T/F plot missing values
-#' @param sw_codebook       T/F generage codebook (only runs if \code{sw_plot_missing} is also \code{TRUE}
+#' @param working_directory         Working directory
+#' @param path_prefix_out           Path and file prefix for output folders
+#' @param DD_Group                  All or specific Waiver group
+#' @param date_Current              Date for last day of data to use for analysis
+#' @param m_months_GER              GER       data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_Syncronys        Syncronys data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_Conduent_Omnicad Omnicad   data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_RORA             RORA      data, date range to keep, from first ANE or last observation back number of months
+#' @param sw_rfsrc_ntree            Random forest, number of trees
+#' @param sw_alpha                  Random forest, model selection alpha level
 #'
 #' @return dat_client_RORA
+#' @importFrom stats predict
 #' @importFrom readxl read_xlsx
 #' @import erikmisc
 #' @import dplyr
