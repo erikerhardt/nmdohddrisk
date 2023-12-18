@@ -99,7 +99,7 @@ dd_read_client_Syncronys <-
     ## i_sheet = "2022-9 Sept.Admits-DDSD_REG_NM-20220926.txt"
 
     # if all Gender is "F", the class becomes logical for FALSE, fix this
-    if (class(dat_sheet[[ i_sheet ]]$Gender) == "logical") {
+    if ( inherits(dat_sheet[[ i_sheet ]]$Gender, "logical") ) {
       dat_sheet[[ i_sheet ]]$Gender <- as.character(dat_sheet[[ i_sheet ]]$Gender)
       dat_sheet[[ i_sheet ]]$Gender[(dat_sheet[[ i_sheet ]]$Gender == "FALSE")] <- "F"
     }
