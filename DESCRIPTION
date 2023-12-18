@@ -35,9 +35,11 @@ Imports:
     cowplot,
     crayon,
     dataReporter,
+    doParallel,
     dplyr,
     erikmisc,
     forcats,
+    foreach,
     ggplot2,
     grid,
     gridExtra,
@@ -58,8 +60,10 @@ Imports:
     stringi,
     stringr,
     tibble,
+    tictoc,
     tidyr,
-    tidyselect
+    tidyselect,
+    tsne
 Suggests:
     rmarkdown
 Remotes:

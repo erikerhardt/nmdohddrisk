@@ -16,7 +16,6 @@
 #' @import tidyr
 #' @import tidyselect
 #' @import parallel
-#' @import tsne
 #' @export
 #'
 #' @examples
