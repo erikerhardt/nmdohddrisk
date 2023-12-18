@@ -239,6 +239,7 @@ dd_features_client_Conduent_Omnicad_read <-
     #, Line_Pd_Units
     #, Line_Proc_Code_Mod1
     #, Line_Proc_Code_Mod2
+    #, Prov_ID
     , Conduent_Omnicad_Line_Billed_Amt
     , Conduent_Omnicad_Line_Pd_Amt
     , Conduent_Omnicad_Diff_Amt
@@ -281,6 +282,7 @@ dd_features_client_Conduent_Omnicad_read <-
       Client_System_ID
     , Client_COE_Cd
     , Line_Svc_Date_First
+    #, Prov_ID
     ) |>
     dplyr::summarize(
       Conduent_Omnicad_Behavioral_Support_Services = Conduent_Omnicad_Behavioral_Support_Services |> sum()

@@ -55,155 +55,157 @@ dd_read_client_Conduent_Omnicad <-
   length(dat_names)
 
 
-  # Waiver is determined, in addition to getting billing information
-  # Client_COE_Cd - Waiver 095 MedFrag, 096 DD Waiver and Mi Via Waiver
-  # Prior Auth indicates DD Waiver (so those without are Mi Via Waiver)
-  # cost center 86651
-
-  # --------------------------------------------------------------------------
-  # Prior Auth indicates DD Waiver (so those without are Mi Via Waiver)
-
-  name_dat_waiver <- "dat_client_Conduent_Omnicad_Waiver"
-
-  dat_names_prior_auth <-
-    dat_names |>
-    stringr::str_subset(
-      pattern = stringr::fixed("DOH Weekly Prior Auth Data Dump")
-    )
-
-
-  #dat_sheet_prior_auth <- list()
-
-  #library(doParallel)  # for %dopar% operator
-  num_cores <- parallel::detectCores() - 2
-  doParallel::registerDoParallel(num_cores)
-
-  tictoc::tic(msg = "Timer") # start timer
-
-
-  # don't prespecify the "results" list
-  results <-
-    foreach::foreach(
-      i_sheet = seq_along(dat_names_prior_auth)
-    #, .combine =                             # default is a list
-    , .inorder = FALSE                        # FALSE is faster
-    , .packages = c("readxl", "dplyr", "stringr", "lubridate")  # character vector of packages that the tasks depend on
-    , .export = NULL                          # character vector of variables to export
-    #) %do% # sequential
-    ) %dopar%  # parallel
-    {
-
-
-  #for (i_sheet in seq_along(dat_names_prior_auth)) {
-    # i_sheet = 40
-
-    print(paste0("Reading Conduent Omnicad, DOH Weekly Prior Auth Data Dump, File ", i_sheet, " of ", length(dat_names_prior_auth)))
-
-    # some workbooks have multiple base and line sheets,
-    #   so read and bind each separately, then join.
-    this_sheet_names <-
-      readxl::excel_sheets(
-        path      = file.path(path_data, dat_names_prior_auth[i_sheet])
-      )
-
-    this_sheet_names_base <-
-      this_sheet_names |>
-      stringr::str_subset(
-        pattern = stringr::fixed("base")
-      )
-    #no-line-prior-auth# this_sheet_names_line <-
-    #no-line-prior-auth#   this_sheet_names |>
-    #no-line-prior-auth#   stringr::str_subset(
-    #no-line-prior-auth#     pattern = stringr::fixed("line")
-    #no-line-prior-auth#   )
-
-    dat_this_base <- list()
-    for (i_sheet_base in seq_along(this_sheet_names_base)) {
-      ## i_sheet_base = 1
-      dat_this_base[[ i_sheet_base ]] <-
-        readxl::read_xlsx(
-          path      = file.path(path_data, dat_names_prior_auth[i_sheet])
-        , sheet     = this_sheet_names_base[i_sheet_base]
-        , guess_max = 1e5
-        , progress  = FALSE
-        ) |>
-        dplyr::select(
-          PA_Client_System_ID
-        ) |>
-        dplyr::rename(
-          Client_System_ID = PA_Client_System_ID
-        )
-    }
-    dat_this_base <-
-      dat_this_base |>
-      dplyr::bind_rows() |>
-      dplyr::distinct()
-
-    #no-line-prior-auth# dat_this_line <- list()
-    #no-line-prior-auth# for (i_sheet_line in seq_along(this_sheet_names_line)) {
-    #no-line-prior-auth#   ## i_sheet_line = 1
-    #no-line-prior-auth#   dat_this_line[[ i_sheet_line ]] <-
-    #no-line-prior-auth#     readxl::read_xlsx(
-    #no-line-prior-auth#       path      = file.path(path_data, dat_names_prior_auth[i_sheet])
-    #no-line-prior-auth#     , sheet     = this_sheet_names_line[i_sheet_line]
-    #no-line-prior-auth#     , guess_max = 1e5
-    #no-line-prior-auth#     , progress  = FALSE
-    #no-line-prior-auth#     ) |>
-    #no-line-prior-auth#     dplyr::select(
-    #no-line-prior-auth#       Line_Svc_Date_First
-    #no-line-prior-auth#     , TCN
-    #no-line-prior-auth#     , Proc_Cd
-    #no-line-prior-auth#     , Line_Allowed_Units
-    #no-line-prior-auth#     , Line_Pd_Units
-    #no-line-prior-auth#     , Line_Proc_Code_Mod1
-    #no-line-prior-auth#     , Line_Proc_Code_Mod2
-    #no-line-prior-auth#     ) |>
-    #no-line-prior-auth#     dplyr::mutate(
-    #no-line-prior-auth#       Line_Svc_Date_First = Line_Svc_Date_First |> lubridate::as_date()
-    #no-line-prior-auth#     )
-    #no-line-prior-auth# }
-    #no-line-prior-auth# dat_this_line <-
-    #no-line-prior-auth#   dat_this_line |>
-    #no-line-prior-auth#   dplyr::bind_rows()
-
-    # join base and line
-    #dat_sheet_prior_auth[[ i_sheet ]] <-
-    out  <-
-      dat_this_base
-      #no-line-prior-auth# dplyr::left_join(
-      #no-line-prior-auth# , dat_this_line
-      #no-line-prior-auth# , by = dplyr::join_by(TCN)
-      #no-line-prior-auth# ) |>
-      #no-line-prior-auth# # pre-calculate features (otherwise too huge when a single file)
-      #no-line-prior-auth# dd_features_client_Conduent_Omnicad_read()
-
-  #} # i_sheet
-
-    # use a return value
-    return( out )
-
-  } # foreach
-
-  tictoc::toc() # end timer
-
-  # explicitly close the implicitly created cluster
-  doParallel::stopImplicitCluster()
-
-
-  dat_client_Conduent_Omnicad_Waiver_DD <-
-    #dat_sheet_prior_auth |>
-    results |>
-    dplyr::bind_rows() |>
-    dplyr::distinct() |>
-    dplyr::arrange(
-      Client_System_ID
-    ) |>
-    dplyr::mutate(
-      Client_Waiver = "DD"
-    )
-
-
-  #dat_client_Conduent_Omnicad_Waiver_DD |> str()
+  # 12/17/2023 Replaced by Client_WaiverType
+  #
+  # # Waiver is determined, in addition to getting billing information
+  # # Client_COE_Cd - Waiver 095 MedFrag, 096 DD Waiver and Mi Via Waiver
+  # # Prior Auth indicates DD Waiver (so those without are Mi Via Waiver)
+  # # cost center 86651
+  #
+  # # --------------------------------------------------------------------------
+  # # Prior Auth indicates DD Waiver (so those without are Mi Via Waiver)
+  #
+  # name_dat_waiver <- "dat_client_Conduent_Omnicad_Waiver"
+  #
+  # dat_names_prior_auth <-
+  #   dat_names |>
+  #   stringr::str_subset(
+  #     pattern = stringr::fixed("DOH Weekly Prior Auth Data Dump")
+  #   )
+  #
+  #
+  # #dat_sheet_prior_auth <- list()
+  #
+  # #library(doParallel)  # for %dopar% operator
+  # num_cores <- parallel::detectCores() - 2
+  # doParallel::registerDoParallel(num_cores)
+  #
+  # tictoc::tic(msg = "Timer") # start timer
+  #
+  #
+  # # don't prespecify the "results" list
+  # results <-
+  #   foreach::foreach(
+  #     i_sheet = seq_along(dat_names_prior_auth)
+  #   #, .combine =                             # default is a list
+  #   , .inorder = FALSE                        # FALSE is faster
+  #   , .packages = c("readxl", "dplyr", "stringr", "lubridate")  # character vector of packages that the tasks depend on
+  #   , .export = NULL                          # character vector of variables to export
+  #   #) %do% # sequential
+  #   ) %dopar%  # parallel
+  #   {
+  #
+  #
+  # #for (i_sheet in seq_along(dat_names_prior_auth)) {
+  #   # i_sheet = 40
+  #
+  #   print(paste0("Reading Conduent Omnicad, DOH Weekly Prior Auth Data Dump, File ", i_sheet, " of ", length(dat_names_prior_auth)))
+  #
+  #   # some workbooks have multiple base and line sheets,
+  #   #   so read and bind each separately, then join.
+  #   this_sheet_names <-
+  #     readxl::excel_sheets(
+  #       path      = file.path(path_data, dat_names_prior_auth[i_sheet])
+  #     )
+  #
+  #   this_sheet_names_base <-
+  #     this_sheet_names |>
+  #     stringr::str_subset(
+  #       pattern = stringr::fixed("base")
+  #     )
+  #   #no-line-prior-auth# this_sheet_names_line <-
+  #   #no-line-prior-auth#   this_sheet_names |>
+  #   #no-line-prior-auth#   stringr::str_subset(
+  #   #no-line-prior-auth#     pattern = stringr::fixed("line")
+  #   #no-line-prior-auth#   )
+  #
+  #   dat_this_base <- list()
+  #   for (i_sheet_base in seq_along(this_sheet_names_base)) {
+  #     ## i_sheet_base = 1
+  #     dat_this_base[[ i_sheet_base ]] <-
+  #       readxl::read_xlsx(
+  #         path      = file.path(path_data, dat_names_prior_auth[i_sheet])
+  #       , sheet     = this_sheet_names_base[i_sheet_base]
+  #       , guess_max = 1e5
+  #       , progress  = FALSE
+  #       ) |>
+  #       dplyr::select(
+  #         PA_Client_System_ID
+  #       ) |>
+  #       dplyr::rename(
+  #         Client_System_ID = PA_Client_System_ID
+  #       )
+  #   }
+  #   dat_this_base <-
+  #     dat_this_base |>
+  #     dplyr::bind_rows() |>
+  #     dplyr::distinct()
+  #
+  #   #no-line-prior-auth# dat_this_line <- list()
+  #   #no-line-prior-auth# for (i_sheet_line in seq_along(this_sheet_names_line)) {
+  #   #no-line-prior-auth#   ## i_sheet_line = 1
+  #   #no-line-prior-auth#   dat_this_line[[ i_sheet_line ]] <-
+  #   #no-line-prior-auth#     readxl::read_xlsx(
+  #   #no-line-prior-auth#       path      = file.path(path_data, dat_names_prior_auth[i_sheet])
+  #   #no-line-prior-auth#     , sheet     = this_sheet_names_line[i_sheet_line]
+  #   #no-line-prior-auth#     , guess_max = 1e5
+  #   #no-line-prior-auth#     , progress  = FALSE
+  #   #no-line-prior-auth#     ) |>
+  #   #no-line-prior-auth#     dplyr::select(
+  #   #no-line-prior-auth#       Line_Svc_Date_First
+  #   #no-line-prior-auth#     , TCN
+  #   #no-line-prior-auth#     , Proc_Cd
+  #   #no-line-prior-auth#     , Line_Allowed_Units
+  #   #no-line-prior-auth#     , Line_Pd_Units
+  #   #no-line-prior-auth#     , Line_Proc_Code_Mod1
+  #   #no-line-prior-auth#     , Line_Proc_Code_Mod2
+  #   #no-line-prior-auth#     ) |>
+  #   #no-line-prior-auth#     dplyr::mutate(
+  #   #no-line-prior-auth#       Line_Svc_Date_First = Line_Svc_Date_First |> lubridate::as_date()
+  #   #no-line-prior-auth#     )
+  #   #no-line-prior-auth# }
+  #   #no-line-prior-auth# dat_this_line <-
+  #   #no-line-prior-auth#   dat_this_line |>
+  #   #no-line-prior-auth#   dplyr::bind_rows()
+  #
+  #   # join base and line
+  #   #dat_sheet_prior_auth[[ i_sheet ]] <-
+  #   out  <-
+  #     dat_this_base
+  #     #no-line-prior-auth# dplyr::left_join(
+  #     #no-line-prior-auth# , dat_this_line
+  #     #no-line-prior-auth# , by = dplyr::join_by(TCN)
+  #     #no-line-prior-auth# ) |>
+  #     #no-line-prior-auth# # pre-calculate features (otherwise too huge when a single file)
+  #     #no-line-prior-auth# dd_features_client_Conduent_Omnicad_read()
+  #
+  # #} # i_sheet
+  #
+  #   # use a return value
+  #   return( out )
+  #
+  # } # foreach
+  #
+  # tictoc::toc() # end timer
+  #
+  # # explicitly close the implicitly created cluster
+  # doParallel::stopImplicitCluster()
+  #
+  #
+  # dat_client_Conduent_Omnicad_Waiver_DD <-
+  #   #dat_sheet_prior_auth |>
+  #   results |>
+  #   dplyr::bind_rows() |>
+  #   dplyr::distinct() |>
+  #   dplyr::arrange(
+  #     Client_System_ID
+  #   ) |>
+  #   dplyr::mutate(
+  #     Client_Waiver = "DD"
+  #   )
+  #
+  #
+  # #dat_client_Conduent_Omnicad_Waiver_DD |> str()
 
 
 
@@ -317,10 +319,12 @@ dd_read_client_Conduent_Omnicad <-
         , Line_Billed_Amt
         #, Line_Allowed_Chrg_Amt
         , Line_Pd_Amt
+        #, Rndr_Prov_ID
         ) |>
         dplyr::rename(
           Conduent_Omnicad_Line_Billed_Amt = Line_Billed_Amt
         , Conduent_Omnicad_Line_Pd_Amt     = Line_Pd_Amt
+        #, Prov_ID                          = Rndr_Prov_ID
         ) |>
         dplyr::mutate(
           Line_Svc_Date_First       = Line_Svc_Date_First |> lubridate::as_date()
@@ -402,46 +406,50 @@ dd_read_client_Conduent_Omnicad <-
   ## }
 
 
-  # Waiver continued --------------------
-  dat_client_Conduent_Omnicad_Waiver <-
-    dat_client_Conduent_Omnicad_Waiver_DD |>
-    dplyr::full_join(
-      dat_sheet_weekly_claims |>
-      dplyr::select(
-        Client_System_ID
-      , Client_COE_Cd
-      ) |>
-      dplyr::distinct()
-    , by = dplyr::join_by(Client_System_ID)
-    ) |>
-    dplyr::mutate(
-      Client_Waiver =
-        dplyr::case_when(
-          Client_Waiver == "DD"                         ~ "DD"
-          # Client_COE_Cd - Waiver 095 MedFrag, 096 DD Waiver and Mi Via Waiver
-        , is.na(Client_Waiver) & Client_COE_Cd == "096" ~ "MV"
-        , is.na(Client_Waiver) & Client_COE_Cd == "095" ~ "MF"
-        , TRUE                                          ~ ""
-        ) |>
-        factor(levels = c("DD", "MV", "MF"))
-    ) |>
-    dplyr::select(
-      Client_System_ID
-    , Client_Waiver
-    )
-
-  #dat_client_Conduent_Omnicad_Waiver |> str()
-
-  name_dat_waiver |> dd_save_to_RData()
+  # 12/17/2023 Replaced by Client_WaiverType
+  #
+  # # Waiver continued --------------------
+  # dat_client_Conduent_Omnicad_Waiver <-
+  #   dat_client_Conduent_Omnicad_Waiver_DD |>
+  #   dplyr::full_join(
+  #     dat_sheet_weekly_claims |>
+  #     dplyr::select(
+  #       Client_System_ID
+  #     , Client_COE_Cd
+  #     ) |>
+  #     dplyr::distinct()
+  #   , by = dplyr::join_by(Client_System_ID)
+  #   ) |>
+  #   dplyr::mutate(
+  #     Client_Waiver =
+  #       dplyr::case_when(
+  #         Client_Waiver == "DD"                         ~ "DD"
+  #         # Client_COE_Cd - Waiver 095 MedFrag, 096 DD Waiver and Mi Via Waiver
+  #       , is.na(Client_Waiver) & Client_COE_Cd == "096" ~ "MV"
+  #       , is.na(Client_Waiver) & Client_COE_Cd == "095" ~ "MF"
+  #       , TRUE                                          ~ ""
+  #       ) |>
+  #       factor(levels = c("DD", "MV", "MF"))
+  #   ) |>
+  #   dplyr::select(
+  #     Client_System_ID
+  #   , Client_Waiver
+  #   )
+  #
+  # #dat_client_Conduent_Omnicad_Waiver |> str()
+  #
+  # name_dat_waiver |> dd_save_to_RData()
 
 
   #return(dat_client_Conduent_Omnicad)
 
-  list_dat_client_Conduent_Omnicad <-
-    list(
-      dat_client_Conduent_Omnicad        = dat_client_Conduent_Omnicad
-    , dat_client_Conduent_Omnicad_Waiver = dat_client_Conduent_Omnicad_Waiver
-    )
-  return(list_dat_client_Conduent_Omnicad)
+  # list_dat_client_Conduent_Omnicad <-
+  #   list(
+  #     dat_client_Conduent_Omnicad        = dat_client_Conduent_Omnicad
+  #   , dat_client_Conduent_Omnicad_Waiver = dat_client_Conduent_Omnicad_Waiver
+  #   )
+  # return(list_dat_client_Conduent_Omnicad)
+
+  return(dat_client_Conduent_Omnicad)
 
 } # dd_read_client_Conduent_Omnicad

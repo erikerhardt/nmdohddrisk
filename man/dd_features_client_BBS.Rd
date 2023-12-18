@@ -24,6 +24,7 @@ Features for Client BBS
 \dontrun{
 dd_features_client_BBS(
     dat_client_BBS
+  , dat_client_Match  = dat_client_Match
   )
 }
 }

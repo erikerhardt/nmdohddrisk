@@ -138,6 +138,7 @@ dd_prediction_model <-
       , dat_client_Syncronys          = dat_client_Syncronys
       , dat_client_RORA               = dat_client_RORA
       , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+      , dat_client_BBS                = dat_client_BBS
       , date_Current                  = date_Current
       , m_months_GER                  = m_months_GER
       , m_months_Syncronys            = m_months_Syncronys
@@ -181,7 +182,7 @@ dd_prediction_model <-
       dat_plot                  =
         dat_all_Model_ID_Train |>
         dplyr::select(
-        , -Client_System_ID
+          -Client_System_ID
         )
     , var_group                 = "ANE_Substantiated"
     , var_color                 = NULL
@@ -249,6 +250,7 @@ dd_prediction_model <-
       , dat_client_Syncronys          = dat_client_Syncronys
       , dat_client_RORA               = dat_client_RORA
       , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+      , dat_client_BBS                = dat_client_BBS
       , date_Current                  = date_Current
       , m_months_GER                  = m_months_GER
       , m_months_Syncronys            = m_months_Syncronys
@@ -465,7 +467,7 @@ dd_prediction_model <-
             #, legend.background     = element_blank() # blank background so points/grid shows through
             #, legend.key            = element_blank() # blank background so points/grid shows through
             )
-  print(p)
+  #print(p)
 
   ggsave(
         file.path(

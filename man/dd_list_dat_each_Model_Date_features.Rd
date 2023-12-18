@@ -12,6 +12,7 @@ dd_list_dat_each_Model_Date_features(
   dat_client_Syncronys = dat_client_Syncronys,
   dat_client_RORA = dat_client_RORA,
   dat_client_Conduent_Omnicad = dat_client_Conduent_Omnicad,
+  dat_client_BBS = dat_client_BBS,
   date_Current = date_Current,
   m_months_GER = m_months_GER,
   m_months_Syncronys = m_months_Syncronys,

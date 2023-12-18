@@ -13,7 +13,7 @@ dd_read_client_Match(
 )
 }
 \arguments{
-\item{fn_list}{files to read or \code{NULL} for most recent by filename}
+\item{fn_list}{file to read or \code{NULL} for most recent by filename}
 
 \item{path_data}{path to data}
 

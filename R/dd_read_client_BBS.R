@@ -31,9 +31,7 @@
 #' }
 dd_read_client_BBS <-
   function(
-    fn_list           = c(
-                          "FY23 BBS Monitoring Data_20230914.xlsx"
-                        )
+    fn_list           = NULL
   , path_data         = "../Data_in/Client_BBS"
   , path_results_dat  = NULL
   , sw_plot_missing   = c(TRUE, FALSE)[1]
@@ -42,47 +40,37 @@ dd_read_client_BBS <-
 
   name_dat <- "dat_client_BBS"
 
-  dat_sheet <- list()
 
-  for (n_fn in fn_list) {
-    ## n_fn = fn_list[1]
-    print(n_fn)
-    dat_sheet[[ n_fn ]] <-
-      readxl::read_xlsx(
-        file.path(path_data, n_fn)
-      , sheet     = 1
-      , guess_max = 1e5
-      , na        = c("N/A", "n/a")
-      ) |>
-      janitor::clean_names(
-        case = "none"
-      ) |>
-      dplyr::select(
-        Date
-      , Name
-      , Category
-      , Activity
-      , Topic
-      , Region
-      , Waiver
-      , At_Risk
-      ) |>
-      dplyr::mutate(
-        Date      = Date      |> lubridate::as_date()
-      )
-  }
-
+  dat_sheet <-
+    e_read_data_subdir_into_lists(
+      fn_path                 = path_data
+    , fn_detect               = c("xlsx$")
+    , sw_fn_or_dat            = c("fn", "dat")[2]
+    , sw_exclude_empty_dir    = c(TRUE, FALSE)[1]
+    , sw_dat_add_col_path_fn  = c(TRUE, FALSE)[1]
+    , sw_dat_print_fn_read    = c(TRUE, FALSE)[2]
+    , excel_sheets            = "all"
+    , sw_clean_names          = c(TRUE, FALSE)[2]
+    , sw_list_or_flat         = c("list", "flat")[1]
+    , excel_range             = NULL
+    , excel_col_names         = TRUE
+    , sw_delim                = c(FALSE, "|")[1]
+    , sw_read_package_csv_txt = c("readr", "utils")[1]
+    )
 
   dat_client_BBS <-
     dat_sheet |>
     dplyr::bind_rows() |>
+    dplyr::select(
+      SSN
+    ) |>
+    dplyr::rename(
+      Client_SSN = SSN
+    ) |>
     dplyr::distinct() |>
     dplyr::mutate(
-    #  Self_guardian = Self_guardian |> factor()
-      Region        = Region        |> factor(levels = c("Metro", "NE", "NW", "SE", "SW", "test"))
-    , At_Risk       = At_Risk       |> factor()
-    , Category      = Category      |> factor()
-    , dat_client_BBS = TRUE
+      BBS_AtRisk      = 1
+    , dat_client_BBS  = TRUE
     )
 
   name_dat |> dd_save_to_RData()
@@ -105,5 +93,71 @@ dd_read_client_BBS <-
   }
 
   return(dat_client_BBS)
+
+  ## name_dat <- "dat_client_BBS"
+  ##
+  ## dat_sheet <- list()
+  ##
+  ## for (n_fn in fn_list) {
+  ##   ## n_fn = fn_list[1]
+  ##   print(n_fn)
+  ##   dat_sheet[[ n_fn ]] <-
+  ##     readxl::read_xlsx(
+  ##       file.path(path_data, n_fn)
+  ##     , sheet     = 1
+  ##     , guess_max = 1e5
+  ##     , na        = c("N/A", "n/a")
+  ##     ) |>
+  ##     janitor::clean_names(
+  ##       case = "none"
+  ##     ) |>
+  ##     dplyr::select(
+  ##       Date
+  ##     , Name
+  ##     , Category
+  ##     , Activity
+  ##     , Topic
+  ##     , Region
+  ##     , Waiver
+  ##     , At_Risk
+  ##     ) |>
+  ##     dplyr::mutate(
+  ##       Date      = Date      |> lubridate::as_date()
+  ##     )
+  ## }
+  ##
+  ##
+  ## dat_client_BBS <-
+  ##   dat_sheet |>
+  ##   dplyr::bind_rows() |>
+  ##   dplyr::distinct() |>
+  ##   dplyr::mutate(
+  ##   #  Self_guardian = Self_guardian |> factor()
+  ##     Region        = Region        |> factor(levels = c("Metro", "NE", "NW", "SE", "SW", "test"))
+  ##   , At_Risk       = At_Risk       |> factor()
+  ##   , Category      = Category      |> factor()
+  ##   , dat_client_BBS = TRUE
+  ##   )
+  ##
+  ## name_dat |> dd_save_to_RData()
+  ## # if (!is.null(path_results_dat)) {
+  ## #   save(
+  ## #     list = ls(pattern = name_dat)
+  ## #   , file = file.path(path_results_dat, paste0(name_dat, ".RData"))
+  ## #   )
+  ## # }
+  ##
+  ## if (sw_plot_missing) {
+  ##   dd_plot_missing_codebook(
+  ##       dat_this         = dat_client_BBS
+  ##     , name_dat         = name_dat
+  ##     , path_results_dat = path_results_dat
+  ##     #, sw_width         = 10
+  ##     #, sw_height        = 10
+  ##     , sw_codebook      = sw_codebook
+  ##     )
+  ## }
+  ##
+  ## return(dat_client_BBS)
 
 } # dd_read_client_BBS

@@ -1,6 +1,6 @@
 #' Read Client Matching ID files
 #'
-#' @param fn_list           files to read or \code{NULL} for most recent by filename
+#' @param fn_list           file to read or \code{NULL} for most recent by filename
 #' @param path_data         path to data
 #' @param path_results_dat  path to write .RData file
 #' @param sw_plot_missing   T/F plot missing values

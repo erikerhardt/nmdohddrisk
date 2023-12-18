@@ -1,11 +1,13 @@
 ## Functions to align data, select features, and join into one data for training or prediction
 
+
 # Match
 #' Title
 #'
 #' @param dat_client_Match dat_client_Match
 #'
 #' @return dat_client_Match_Model
+#' @export
 #'
 dd_dat_client_Match_Model <-
   function(
@@ -39,6 +41,7 @@ dd_dat_client_Match_Model <-
 #' @param dat_client_IMB_ANE dat_client_IMB_ANE
 #'
 #' @return dat_client_IMB_ANE_Model
+#' @export
 #'
 dd_dat_client_IMB_ANE_Model <-
   function(
@@ -77,6 +80,7 @@ dd_dat_client_IMB_ANE_Model <-
 #' @param dat_client_GER dat_client_GER
 #'
 #' @return dat_client_GER_Model
+#' @export
 #'
 dd_dat_client_GER_Model <-
   function(
@@ -123,6 +127,7 @@ dd_dat_client_GER_Model <-
 #' @param dat_client_Syncronys dat_client_Syncronys
 #'
 #' @return dat_client_Syncronys_Model
+#' @export
 #'
 dd_dat_client_Syncronys_Model <-
   function(
@@ -153,6 +158,7 @@ dd_dat_client_Syncronys_Model <-
 #' @param dat_client_RORA dat_client_RORA
 #'
 #' @return dat_client_RORA_Model
+#' @export
 #'
 dd_dat_client_RORA_Model <-
   function(
@@ -187,12 +193,33 @@ dd_dat_client_RORA_Model <-
 
 #' Title
 #'
+#' @param dat_client_BBS dat_client_BBS
+#'
+#' @return dat_client_BBS_Model
+#' @export
+#'
+dd_dat_client_BBS_Model <-
+  function(
+    dat_client_BBS = dat_client_BBS
+  ) {
+
+  # BBS, select features
+  dat_client_BBS_Model <-
+    dat_client_BBS
+
+  return(dat_client_BBS_Model)
+}
+
+
+#' Title
+#'
 #' @param dat_client_GER_Model dat_client_GER_Model
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
 #' @param date_Current date_Current
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_GER_Model_Date
+#' @export
 #'
 dd_dat_client_GER_Model_Date <-
   function(
@@ -249,6 +276,7 @@ dd_dat_client_GER_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_RORA_Model_Date
+#' @export
 #'
 dd_dat_client_RORA_Model_Date <-
   function(
@@ -305,6 +333,7 @@ dd_dat_client_RORA_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_Syncronys_Model_Date
+#' @export
 #'
 dd_dat_client_Syncronys_Model_Date <-
   function(
@@ -362,6 +391,7 @@ dd_dat_client_Syncronys_Model_Date <-
 #' @param sw_ANE_Current sw_ANE_Current
 #'
 #' @return dat_client_Conduent_Omnicad_Model_Date
+#' @export
 #'
 dd_dat_client_Conduent_Omnicad_Model_Date <-
   function(
@@ -420,6 +450,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date <-
 #' @param m_months_GER m_months_GER
 #'
 #' @return dat_client_GER_Model_Date_features_Model
+#' @export
 #'
 dd_dat_client_GER_Model_Date_features_Model <-
   function(
@@ -576,6 +607,7 @@ dd_dat_client_GER_Model_Date_features_Model <-
 #' @param m_months_RORA m_months_RORA
 #'
 #' @return dat_client_RORA_Model_Date_features
+#' @export
 #'
 dd_dat_client_RORA_Model_Date_features <-
   function(
@@ -704,12 +736,100 @@ dd_dat_client_RORA_Model_Date_features <-
 #'
 #' @param dat_client_Match_Model dat_client_Match_Model
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
+#' @param dat_client_BBS_Model_Date dat_client_BBS_Model_Date
+#' @param date_Current date_Current
+#' @param sw_ANE_Current sw_ANE_Current
+#' @param m_months_BBS m_months_BBS
+#'
+#' @return dat_client_BBS_Model_Date_features
+#' @export
+#'
+dd_dat_client_BBS_Model_Date_features <-
+  function(
+    dat_client_Match_Model      = dat_client_Match_Model
+  , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+  , dat_client_BBS_Model        = dat_client_BBS_Model
+  , date_Current                = date_Current
+  , sw_ANE_Current              = c("ANE", "Current")[1]
+  ) {
+
+    # Join Match, IMB_ANE, and BBS
+    dat_client_BBS_Model_Date_features <-
+      dat_client_Match_Model |>
+      dplyr::left_join(
+        dat_client_IMB_ANE_Model
+      , by = join_by(Client_System_ID)
+      ) |>
+      dplyr::left_join(
+        dat_client_BBS_Model
+      , by = join_by(Client_System_ID)
+      )
+
+    if (sw_ANE_Current == c("ANE", "Current")[1]) {
+      dat_client_BBS_Model_Date_features <-
+        dat_client_BBS_Model_Date_features |>
+        dplyr::mutate(
+          Last_Date =
+            dplyr::case_when(
+              !is.na(ANE_Date) ~ ANE_Date
+            , TRUE             ~ date_Current
+            )
+        )
+    }
+    if (sw_ANE_Current == c("ANE", "Current")[2]) {
+      dat_client_BBS_Model_Date_features <-
+        dat_client_BBS_Model_Date_features |>
+        dplyr::mutate(
+          Last_Date = date_Current
+        )
+    }
+
+    dat_client_BBS_Model_Date_features <-
+      dat_client_BBS_Model_Date_features |>
+      # clean rest of data
+      dplyr::mutate(
+        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+      , ANE_Substantiated =
+          dplyr::case_when(
+            is.na(ANE_Substantiated)  ~ 0
+          , TRUE                      ~ ANE_Substantiated
+          ) |>
+          factor(levels = c(0, 1), labels = c("No", "Yes"))
+      ) |>
+      dplyr::select(
+        Client_System_ID
+      ##, Client_SSN
+      ##, Client_TherapID
+      , Client_Gender
+      ##, Client_DOB
+      , Client_Ethnicity
+      , Client_Race
+      , Client_Region
+      , Client_Waiver
+      ##, ANE_Date
+      , ANE_Substantiated
+      , BBS_AtRisk
+      , Age
+      ) |>
+      dplyr::relocate(
+        ANE_Substantiated
+      )
+
+  return(dat_client_BBS_Model_Date_features)
+}
+
+
+#' Title
+#'
+#' @param dat_client_Match_Model dat_client_Match_Model
+#' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
 #' @param dat_client_Syncronys_Model_Date dat_client_Syncronys_Model_Date
 #' @param date_Current date_Current
 #' @param sw_ANE_Current sw_ANE_Current
 #' @param m_months_Syncronys m_months_Syncronys
 #'
 #' @return dat_client_Syncronys_Model_Date_features
+#' @export
 #'
 dd_dat_client_Syncronys_Model_Date_features <-
   function(
@@ -831,6 +951,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
 #' @param m_months_Conduent_Omnicad m_months_Conduent_Omnicad
 #'
 #' @return dat_client_Conduent_Omnicad_Model_Date_features
+#' @export
 #'
 dd_dat_client_Conduent_Omnicad_Model_Date_features <-
   function(
@@ -998,6 +1119,7 @@ dd_list_dat_each_Model_Date_features <-
     , dat_client_Syncronys          = dat_client_Syncronys
     , dat_client_RORA               = dat_client_RORA
     , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+    , dat_client_BBS                = dat_client_BBS
     , date_Current                  = date_Current
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
@@ -1028,6 +1150,11 @@ dd_list_dat_each_Model_Date_features <-
   dat_client_RORA_Model <-
     dd_dat_client_RORA_Model(
       dat_client_RORA = dat_client_RORA
+    )
+
+  dat_client_BBS_Model <-
+    dd_dat_client_BBS_Model(
+      dat_client_BBS = dat_client_BBS
     )
 
   # Subset by date
@@ -1104,6 +1231,15 @@ dd_list_dat_each_Model_Date_features <-
     , m_months_Conduent_Omnicad               = m_months_Conduent_Omnicad
     )
 
+  dat_client_BBS_Model_Date_features <-
+    dd_dat_client_BBS_Model_Date_features(
+      dat_client_Match_Model      = dat_client_Match_Model
+    , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+    , dat_client_BBS_Model        = dat_client_BBS_Model
+    , date_Current                = date_Current
+    , sw_ANE_Current              = sw_ANE_Current
+    )
+
 
   list_dat_each_Model_Date_features <-
     list(
@@ -1111,6 +1247,7 @@ dd_list_dat_each_Model_Date_features <-
     , RORA              = dat_client_RORA_Model_Date_features
     , Syncronys         = dat_client_Syncronys_Model_Date_features
     , Conduent_Omnicad  = dat_client_Conduent_Omnicad_Model_Date_features
+    , BBS               = dat_client_BBS_Model_Date_features
     )
 
   return(list_dat_each_Model_Date_features)
@@ -1135,6 +1272,7 @@ dd_dat_all_Model_ID <-
       , dat_client_Syncronys_Model_Date_features
       , dat_client_Conduent_Omnicad_Model_Date_features
       , dat_client_RORA_Model_Date_features
+      , dat_client_BBS_Model_Date_features
       )
   , by_for_join = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
   ) {
