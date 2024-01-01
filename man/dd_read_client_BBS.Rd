@@ -32,9 +32,7 @@ Read Client BBS
 \examples{
 \dontrun{
 dd_read_client_BBS(
-    fn_list           = c(
-                          "FY23 BBS Monitoring Data_20230914.xlsx"
-                        )
+    fn_list           = NULL
   , path_data         = "../Data_in/Client_BBS"
   , path_results_dat  = path_results_dat
   , sw_plot_missing   = c(TRUE, FALSE)[1]

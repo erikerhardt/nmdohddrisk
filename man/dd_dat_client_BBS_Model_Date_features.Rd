@@ -9,7 +9,8 @@ dd_dat_client_BBS_Model_Date_features(
   dat_client_IMB_ANE_Model = dat_client_IMB_ANE_Model,
   dat_client_BBS_Model = dat_client_BBS_Model,
   date_Current = date_Current,
-  sw_ANE_Current = c("ANE", "Current")[1]
+  sw_ANE_Current = c("ANE", "Current")[1],
+  m_months_BBS = m_months_BBS
 )
 }
 \arguments{

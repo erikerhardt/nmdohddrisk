@@ -334,6 +334,66 @@ dd_dat_client_RORA_Model_Date <-
 
 #' Title
 #'
+#' @param dat_client_BBS_Model dat_client_BBS_Model
+#' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
+#' @param date_Current date_Current
+#' @param sw_ANE_Current sw_ANE_Current
+#'
+#' @return dat_client_BBS_Model_Date
+#' @import dplyr
+#' @export
+#'
+dd_dat_client_BBS_Model_Date <-
+  function(
+    dat_client_BBS_Model        = dat_client_BBS_Model
+  , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+  , date_Current                = date_Current
+  , sw_ANE_Current              = c("ANE", "Current")[1]
+  ) {
+
+  if (sw_ANE_Current == c("ANE", "Current")[1]) {
+    # BBS, for ANE, keep only data prior to the first ANE date
+    dat_client_BBS_Model_Date <-
+      dat_client_BBS_Model |>
+      dplyr::left_join(
+        dat_client_IMB_ANE_Model
+      , by = join_by(Client_System_ID)
+      , relationship = "many-to-many"
+      ) |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::filter(
+        !is.na(BBS_Date)
+      , is.na(ANE_Date) |
+        (BBS_Date <= ANE_Date)
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(
+        -ANE_Date
+      , -ANE_Substantiated
+      )
+  }
+
+  if (sw_ANE_Current == c("ANE", "Current")[2]) {
+    dat_client_BBS_Model_Date <-
+      dat_client_BBS_Model |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::filter(
+        !is.na(BBS_Date)
+      , (BBS_Date <= date_Current)
+      ) |>
+      dplyr::ungroup()
+  }
+
+  return(dat_client_BBS_Model_Date)
+}
+
+
+#' Title
+#'
 #' @param dat_client_Syncronys dat_client_Syncronys
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
 #' @param date_Current date_Current
@@ -764,6 +824,7 @@ dd_dat_client_BBS_Model_Date_features <-
   , dat_client_BBS_Model        = dat_client_BBS_Model
   , date_Current                = date_Current
   , sw_ANE_Current              = c("ANE", "Current")[1]
+  , m_months_BBS                = m_months_BBS
   ) {
 
     # Join Match, IMB_ANE, and BBS
@@ -799,6 +860,37 @@ dd_dat_client_BBS_Model_Date_features <-
 
     dat_client_BBS_Model_Date_features <-
       dat_client_BBS_Model_Date_features |>
+      # BBS, sum Ger_AtRisk_* features over last M = 3, 6, and 12 months
+      dplyr::filter(
+        #is.na(BBS_Date) |
+        BBS_Date >= ((Last_Date - lubridate::duration(m_months_BBS)) |> as_date())
+      #, BBS_Waiver %in% c("DDSD - DD Waiver")
+      ) |>
+      dplyr::arrange(
+        Client_System_ID
+      , dplyr::desc(BBS_Date)
+      ) |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::summarize(
+        Client_System_ID                    = Client_System_ID                    |> first()
+      #, Client_SSN                          = Client_SSN                          |> first()
+      #, Client_TherapID                     = Client_TherapID                     |> first()
+      , Client_Gender                       = Client_Gender                       |> first()
+      , Client_DOB                          = Client_DOB                          |> first()
+      , Client_Ethnicity                    = Client_Ethnicity                    |> first()
+      , Client_Race                         = Client_Race                         |> first()
+      , Client_Region                       = Client_Region                       |> first()
+      , Client_Waiver                       = Client_Waiver                       |> first()
+      , ANE_Date                            = ANE_Date                            |> first()
+      , ANE_Substantiated                   = ANE_Substantiated                   |> first()
+      # New with Model_02
+      , BBS_Date                            = BBS_Date                            |> first()
+      , BBS_AtRisk                          = sum(BBS_AtRisk == 1, na.rm = TRUE)
+      , Last_Date                           = Last_Date                           |> first()
+      ) |>
+      dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
         Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
@@ -1145,6 +1237,7 @@ dd_list_dat_each_Model_Date_features <-
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
     , m_months_RORA                 = m_months_RORA
+    , m_months_BBS                  = m_months_BBS
   ) {
 
   dat_client_Match_Model <-
@@ -1189,6 +1282,14 @@ dd_list_dat_each_Model_Date_features <-
   dat_client_RORA_Model_Date <-
     dd_dat_client_RORA_Model_Date(
       dat_client_RORA_Model       = dat_client_RORA_Model
+    , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+    , date_Current                = date_Current
+    , sw_ANE_Current              = sw_ANE_Current
+    )
+
+  dat_client_BBS_Model_Date <-
+    dd_dat_client_BBS_Model_Date(
+      dat_client_BBS_Model        = dat_client_BBS_Model
     , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
     , date_Current                = date_Current
     , sw_ANE_Current              = sw_ANE_Current
@@ -1258,6 +1359,7 @@ dd_list_dat_each_Model_Date_features <-
     , dat_client_BBS_Model        = dat_client_BBS_Model
     , date_Current                = date_Current
     , sw_ANE_Current              = sw_ANE_Current
+    , m_months_BBS                = m_months_BBS
     )
 
 

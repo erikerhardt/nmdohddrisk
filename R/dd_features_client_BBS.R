@@ -41,6 +41,7 @@ dd_features_client_BBS <-
     dplyr::select(
       Client_System_ID
     , BBS_AtRisk
+    , BBS_Date
     ) |>
     dplyr::relocate(
       Client_System_ID

@@ -17,7 +17,8 @@ dd_list_dat_each_Model_Date_features(
   m_months_GER = m_months_GER,
   m_months_Syncronys = m_months_Syncronys,
   m_months_Conduent_Omnicad = m_months_Conduent_Omnicad,
-  m_months_RORA = m_months_RORA
+  m_months_RORA = m_months_RORA,
+  m_months_BBS = m_months_BBS
 )
 }
 \arguments{

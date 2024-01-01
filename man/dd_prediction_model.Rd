@@ -14,6 +14,7 @@ dd_prediction_model(
   m_months_Syncronys = "2 months",
   m_months_Conduent_Omnicad = "2 months",
   m_months_RORA = "2 months",
+  m_months_BBS = "12 months",
   sw_rfsrc_ntree = 500,
   sw_alpha = 0.2
 )
@@ -34,6 +35,8 @@ dd_prediction_model(
 \item{m_months_Conduent_Omnicad}{Omnicad   data, date range to keep, from first ANE or last observation back number of months}
 
 \item{m_months_RORA}{RORA      data, date range to keep, from first ANE or last observation back number of months}
+
+\item{m_months_BBS}{BBS       data, date range to keep, from first ANE or last observation back number of months}
 
 \item{sw_rfsrc_ntree}{Random forest, number of trees}
 

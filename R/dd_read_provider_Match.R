@@ -1,6 +1,6 @@
 #' Read Provider Matching ID files
 #'
-#' @param fn_list           list of files to read
+#' @param fn_list           file to read or \code{NULL} for most recent by filename
 #' @param path_data         path to data
 #' @param path_results_dat  path to write .RData file
 #' @param sw_plot_missing   T/F plot missing values
@@ -31,9 +31,7 @@
 #' }
 dd_read_provider_Match <-
   function(
-    fn_list           = c(
-                          "Provider Omnicad View_20230918.xlsx"
-                        )
+    fn_list           = NULL
   , path_data         = "../Data_in/Provider_Matching"
   , path_results_dat  = NULL
   , sw_plot_missing   = c(TRUE, FALSE)[1]
@@ -42,15 +40,24 @@ dd_read_provider_Match <-
 
   name_dat <- "dat_provider_Match"
 
+  if ( is.null(fn_list) ) {
+    fn_list <-
+      e_file_first_last(name = NULL, path = path_data)
+  } else {
+    fn_list <-
+      file.path(path_data, fn_list)
+  }
+
   dat_sheet <-
     readxl::read_xlsx(
-      file.path(path_data, fn_list)
+      path      = fn_list
     , guess_max = 1e5
-    #, na        = "N/A"
+    , na        = "N/A"
     ) |>
     janitor::clean_names(
       case = "none"
     )
+
 
   #str(dat_sheet)
 
@@ -91,7 +98,7 @@ dd_read_provider_Match <-
     , Prov_Added_Date             = Prov_Added_Date             |> lubridate::as_date()
     , Prov_ImportedDate                = Prov_ImportedDate                |> lubridate::as_date()
     #, Prov_ImportedFileName            = Prov_ImportedFileName            |>
-    , Prov_ModifiedDate                = Prov_ModifiedDate                |> lubridate::as_date()
+    #, Prov_ModifiedDate                = Prov_ModifiedDate                |> lubridate::as_date()
     #, Prov_ModifiedBy                  = Prov_ModifiedBy                  |>
     #, Prov_ProviderLocationFullAddress = Prov_ProviderLocationFullAddress |>
     #, Prov_ProviderCity                = Prov_ProviderCity                |>

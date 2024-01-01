@@ -8,6 +8,7 @@
 #' @param m_months_Syncronys        Syncronys data, date range to keep, from first ANE or last observation back number of months
 #' @param m_months_Conduent_Omnicad Omnicad   data, date range to keep, from first ANE or last observation back number of months
 #' @param m_months_RORA             RORA      data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_BBS              BBS       data, date range to keep, from first ANE or last observation back number of months
 #' @param sw_rfsrc_ntree            Random forest, number of trees
 #' @param sw_alpha                  Random forest, model selection alpha level
 #'
@@ -47,6 +48,7 @@ dd_prediction_model <-
   , m_months_Syncronys        = "2 months"
   , m_months_Conduent_Omnicad = "2 months"
   , m_months_RORA             = "2 months"
+  , m_months_BBS              = "12 months"
   , sw_rfsrc_ntree            = 500
   , sw_alpha                  = 0.20
   ) {
@@ -74,6 +76,9 @@ dd_prediction_model <-
     , ", "
     , "RORA "
     , m_months_RORA              |> stringr::str_replace(pattern = " months", "mo")
+    , ", "
+    , "BBS "
+    , m_months_BBS               |> stringr::str_replace(pattern = " months", "mo")
     , ")"
     )
 
@@ -136,19 +141,20 @@ dd_prediction_model <-
   # Train data
   list_dat_each_Model_Date_features_Train <-
     dd_list_dat_each_Model_Date_features(
-        sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
-      , dat_client_Match              = dat_client_Match
-      , dat_client_IMB_ANE            = dat_client_IMB_ANE
-      , dat_client_GER                = dat_client_GER
-      , dat_client_Syncronys          = dat_client_Syncronys
-      , dat_client_RORA               = dat_client_RORA
-      , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
-      , dat_client_BBS                = dat_client_BBS
-      , date_Current                  = date_Current
-      , m_months_GER                  = m_months_GER
-      , m_months_Syncronys            = m_months_Syncronys
-      , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
-      , m_months_RORA                 = m_months_RORA
+      sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
+    , dat_client_Match              = dat_client_Match
+    , dat_client_IMB_ANE            = dat_client_IMB_ANE
+    , dat_client_GER                = dat_client_GER
+    , dat_client_Syncronys          = dat_client_Syncronys
+    , dat_client_RORA               = dat_client_RORA
+    , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+    , dat_client_BBS                = dat_client_BBS
+    , date_Current                  = date_Current
+    , m_months_GER                  = m_months_GER
+    , m_months_Syncronys            = m_months_Syncronys
+    , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
+    , m_months_RORA                 = m_months_RORA
+    , m_months_BBS                  = m_months_BBS
     )
 
   # Waiver subset
@@ -222,6 +228,55 @@ dd_prediction_model <-
     )
 
 
+
+
+  # ANE Before and After date_Current
+  dat_client_IMB_ANE_before_after <-
+    dat_client_IMB_ANE |>
+    dplyr::mutate(
+      ANE_Before_First =
+        dplyr::case_when(
+          (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
+        , TRUE ~ NA #"No ANE Before"
+        )
+    , ANE_After_Last =
+        dplyr::case_when(
+          (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
+        , TRUE ~ NA #"No ANE After"
+        )
+    ) |>
+    dplyr::select(
+      Client_System_ID
+    , ANE_Before_First
+    , ANE_After_Last
+    ) |>
+    dplyr::distinct() |>
+    dplyr::group_by(
+      Client_System_ID
+    ) |>
+    dplyr::mutate(
+      ANE_Before_First = ANE_Before_First |> dplyr::first(na_rm = TRUE)
+    , ANE_After_Last   = ANE_After_Last   |> dplyr::last (na_rm = TRUE)
+    ) |>
+    #tidyr::fill(
+    #  ANE_Before_First
+    #, .direction = "updown"
+    #) |>
+    #tidyr::fill(
+    #  ANE_After_Last
+    #, .direction = "downup"
+    #) |>
+    dplyr::ungroup() |>
+    dplyr::distinct() |>
+    dplyr::right_join(
+      dat_client_Match |>
+      dplyr::select(
+        Client_System_ID
+      )
+    , by = dplyr::join_by(Client_System_ID)
+    )
+
+
   #dat_all_Model_ID_Train
   #dat_all_Model_ID_Train |> str()
   #dat_all_Model_ID_Train |> summary()
@@ -248,19 +303,20 @@ dd_prediction_model <-
   # Predict data
   list_dat_each_Model_Date_features_Predict <-
     dd_list_dat_each_Model_Date_features(
-        sw_ANE_Current                = c("ANE", "Current")[2]      # ANE to train, Current to predict
-      , dat_client_Match              = dat_client_Match
-      , dat_client_IMB_ANE            = dat_client_IMB_ANE
-      , dat_client_GER                = dat_client_GER
-      , dat_client_Syncronys          = dat_client_Syncronys
-      , dat_client_RORA               = dat_client_RORA
-      , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
-      , dat_client_BBS                = dat_client_BBS
-      , date_Current                  = date_Current
-      , m_months_GER                  = m_months_GER
-      , m_months_Syncronys            = m_months_Syncronys
-      , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
-      , m_months_RORA                 = m_months_RORA
+      sw_ANE_Current                = c("ANE", "Current")[2]      # ANE to train, Current to predict
+    , dat_client_Match              = dat_client_Match
+    , dat_client_IMB_ANE            = dat_client_IMB_ANE
+    , dat_client_GER                = dat_client_GER
+    , dat_client_Syncronys          = dat_client_Syncronys
+    , dat_client_RORA               = dat_client_RORA
+    , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+    , dat_client_BBS                = dat_client_BBS
+    , date_Current                  = date_Current
+    , m_months_GER                  = m_months_GER
+    , m_months_Syncronys            = m_months_Syncronys
+    , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
+    , m_months_RORA                 = m_months_RORA
+    , m_months_BBS                  = m_months_BBS
     )
 
   # Waiver subset
@@ -368,9 +424,27 @@ dd_prediction_model <-
       #, Client_Region
       , Client_County
       # XXX Add street address
+      , Client_Res_Addr_Line_1
+      , Client_Res_Addr_Line_2
+      , Client_Res_Addr_City
+      , Client_Res_State_Code
+      , Client_Res_Addr_Zip_5
+      , Client_Res_Addr_Zip_4
+      , Client_County
       )
     , by = dplyr::join_by(Client_System_ID)
+    ) |>
+    dplyr::left_join(
+      dat_client_IMB_ANE_before_after
+    , by = dplyr::join_by(Client_System_ID)
+    ) |>
+    dplyr::mutate(
+      date_Current = date_Current
+    , date_of_run  = lubridate::today()
     )
+
+
+
 
   dat_all_Model_ID_Predict_out <-
     dat_all_Model_ID_Predict_out_all |>
@@ -380,9 +454,19 @@ dd_prediction_model <-
     , Class
     , Sens
     , Spec
+    , date_Current
+    , ANE_Before_First
+    , ANE_After_Last
     , Client_SSN
     , Client_Waiver
+    , Client_Res_Addr_Line_1
+    , Client_Res_Addr_Line_2
+    , Client_Res_Addr_City
+    , Client_Res_State_Code
+    , Client_Res_Addr_Zip_5
+    , Client_Res_Addr_Zip_4
     , Client_County
+    , date_of_run
     )
 
 

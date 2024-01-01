@@ -5,7 +5,7 @@
 \title{Read Provider Matching ID files}
 \usage{
 dd_read_provider_Match(
-  fn_list = c("Provider Omnicad View_20230918.xlsx"),
+  fn_list = NULL,
   path_data = "../Data_in/Provider_Matching",
   path_results_dat = NULL,
   sw_plot_missing = c(TRUE, FALSE)[1],
@@ -13,7 +13,7 @@ dd_read_provider_Match(
 )
 }
 \arguments{
-\item{fn_list}{list of files to read}
+\item{fn_list}{file to read or \code{NULL} for most recent by filename}
 
 \item{path_data}{path to data}
 

@@ -52,6 +52,16 @@ dd_read_client_GER <-
     , sw_read_package_csv_txt = c("readr", "utils")[1]
     )
 
+
+  # some class mismatches between files
+  for (i_sheet in 1:length(dat_sheet)) {
+    dat_sheet[[ i_sheet ]] <-
+      dat_sheet[[ i_sheet ]] |>
+      dplyr::mutate(
+        Report_Date = Report_Date |> lubridate::as_date()
+      )
+  }
+
   #str(dat_sheet)
 
   ## Risk_Prediction_Model/Documentation/GER_Power Query Filter Downs for At Risk GER to Model.rtf
