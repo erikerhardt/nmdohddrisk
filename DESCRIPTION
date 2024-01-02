@@ -1,7 +1,7 @@
 Package: nmdohddrisk
 Type: Package
 Title: Risk Prediction model for NM DOH DD ANE
-Version: 0.0.10
+Version: 0.0.11
 Date: 2024-01-01
 Authors@R:
     c(person(

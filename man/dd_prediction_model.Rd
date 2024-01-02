@@ -15,6 +15,7 @@ dd_prediction_model(
   m_months_Conduent_Omnicad = "2 months",
   m_months_RORA = "2 months",
   m_months_BBS = "12 months",
+  m_months_CaseNotes = "2 months",
   sw_rfsrc_ntree = 500,
   sw_alpha = 0.2
 )

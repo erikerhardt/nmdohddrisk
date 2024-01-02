@@ -218,6 +218,26 @@ dd_dat_client_BBS_Model <-
 
 #' Title
 #'
+#' @param dat_client_CaseNotes dat_client_CaseNotes
+#'
+#' @return dat_client_CaseNotes_Model
+#' @export
+#'
+dd_dat_client_CaseNotes_Model <-
+  function(
+    dat_client_CaseNotes = dat_client_CaseNotes
+  ) {
+
+  # CaseNotes, select features
+  dat_client_CaseNotes_Model <-
+    dat_client_CaseNotes
+
+  return(dat_client_CaseNotes_Model)
+}
+
+
+#' Title
+#'
 #' @param dat_client_GER_Model dat_client_GER_Model
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
 #' @param date_Current date_Current
@@ -389,6 +409,66 @@ dd_dat_client_BBS_Model_Date <-
   }
 
   return(dat_client_BBS_Model_Date)
+}
+
+
+#' Title
+#'
+#' @param dat_client_CaseNotes_Model dat_client_CaseNotes_Model
+#' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
+#' @param date_Current date_Current
+#' @param sw_ANE_Current sw_ANE_Current
+#'
+#' @return dat_client_CaseNotes_Model_Date
+#' @import dplyr
+#' @export
+#'
+dd_dat_client_CaseNotes_Model_Date <-
+  function(
+    dat_client_CaseNotes_Model  = dat_client_CaseNotes_Model
+  , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+  , date_Current                = date_Current
+  , sw_ANE_Current              = c("ANE", "Current")[1]
+  ) {
+
+  if (sw_ANE_Current == c("ANE", "Current")[1]) {
+    # CaseNotes, for ANE, keep only data prior to the first ANE date
+    dat_client_CaseNotes_Model_Date <-
+      dat_client_CaseNotes_Model |>
+      dplyr::left_join(
+        dat_client_IMB_ANE_Model
+      , by = join_by(Client_System_ID)
+      , relationship = "many-to-many"
+      ) |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::filter(
+        !is.na(CaseNotes_Date)
+      , is.na(ANE_Date) |
+        (CaseNotes_Date <= ANE_Date)
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(
+        -ANE_Date
+      , -ANE_Substantiated
+      )
+  }
+
+  if (sw_ANE_Current == c("ANE", "Current")[2]) {
+    dat_client_CaseNotes_Model_Date <-
+      dat_client_CaseNotes_Model |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::filter(
+        !is.na(CaseNotes_Date)
+      , (CaseNotes_Date <= date_Current)
+      ) |>
+      dplyr::ungroup()
+  }
+
+  return(dat_client_CaseNotes_Model_Date)
 }
 
 
@@ -928,6 +1008,125 @@ dd_dat_client_BBS_Model_Date_features <-
 #'
 #' @param dat_client_Match_Model dat_client_Match_Model
 #' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
+#' @param dat_client_CaseNotes_Model dat_client_CaseNotes_Model
+#' @param date_Current date_Current
+#' @param sw_ANE_Current sw_ANE_Current
+#'
+#' @return dat_client_CaseNotes_Model_Date_features
+#' @import dplyr
+#' @export
+#'
+dd_dat_client_CaseNotes_Model_Date_features <-
+  function(
+    dat_client_Match_Model      = dat_client_Match_Model
+  , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+  , dat_client_CaseNotes_Model  = dat_client_CaseNotes_Model
+  , date_Current                = date_Current
+  , sw_ANE_Current              = c("ANE", "Current")[1]
+  , m_months_CaseNotes          = m_months_CaseNotes
+  ) {
+
+    # Join Match, IMB_ANE, and CaseNotes
+    dat_client_CaseNotes_Model_Date_features <-
+      dat_client_Match_Model |>
+      dplyr::left_join(
+        dat_client_IMB_ANE_Model
+      , by = join_by(Client_System_ID)
+      ) |>
+      dplyr::left_join(
+        dat_client_CaseNotes_Model
+      , by = join_by(Client_System_ID)
+      )
+
+    if (sw_ANE_Current == c("ANE", "Current")[1]) {
+      dat_client_CaseNotes_Model_Date_features <-
+        dat_client_CaseNotes_Model_Date_features |>
+        dplyr::mutate(
+          Last_Date =
+            dplyr::case_when(
+              !is.na(ANE_Date) ~ ANE_Date
+            , TRUE             ~ date_Current
+            )
+        )
+    }
+    if (sw_ANE_Current == c("ANE", "Current")[2]) {
+      dat_client_CaseNotes_Model_Date_features <-
+        dat_client_CaseNotes_Model_Date_features |>
+        dplyr::mutate(
+          Last_Date = date_Current
+        )
+    }
+
+    dat_client_CaseNotes_Model_Date_features <-
+      dat_client_CaseNotes_Model_Date_features |>
+      # CaseNotes, sum Ger_AtRisk_* features over last M = 3, 6, and 12 months
+      dplyr::filter(
+        #is.na(CaseNotes_Date) |
+        CaseNotes_Date >= ((Last_Date - lubridate::duration(m_months_CaseNotes)) |> as_date())
+      #, CaseNotes_Waiver %in% c("DDSD - DD Waiver")
+      ) |>
+      dplyr::arrange(
+        Client_System_ID
+      , dplyr::desc(CaseNotes_Date)
+      ) |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::summarize(
+        Client_System_ID                    = Client_System_ID                    |> first()
+      #, Client_SSN                          = Client_SSN                          |> first()
+      #, Client_TherapID                     = Client_TherapID                     |> first()
+      , Client_Gender                       = Client_Gender                       |> first()
+      , Client_DOB                          = Client_DOB                          |> first()
+      , Client_Ethnicity                    = Client_Ethnicity                    |> first()
+      , Client_Race                         = Client_Race                         |> first()
+      , Client_Region                       = Client_Region                       |> first()
+      , Client_Waiver                       = Client_Waiver                       |> first()
+      , ANE_Date                            = ANE_Date                            |> first()
+      , ANE_Substantiated                   = ANE_Substantiated                   |> first()
+      # New with Model_02
+      , CaseNotes_Date                      = CaseNotes_Date                      |> first()
+      , CaseNotes_AtRisk                    = sum(CaseNotes_AtRisk, na.rm = TRUE)
+      , Last_Date                           = Last_Date                           |> first()
+      ) |>
+      dplyr::ungroup() |>
+      # clean rest of data
+      dplyr::mutate(
+        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+      , ANE_Substantiated =
+          dplyr::case_when(
+            is.na(ANE_Substantiated)  ~ 0
+          , TRUE                      ~ ANE_Substantiated
+          ) |>
+          factor(levels = c(0, 1), labels = c("No", "Yes"))
+      ) |>
+      dplyr::select(
+        Client_System_ID
+      ##, Client_SSN
+      ##, Client_TherapID
+      , Client_Gender
+      ##, Client_DOB
+      , Client_Ethnicity
+      , Client_Race
+      , Client_Region
+      , Client_Waiver
+      ##, ANE_Date
+      , ANE_Substantiated
+      , CaseNotes_AtRisk
+      , Age
+      ) |>
+      dplyr::relocate(
+        ANE_Substantiated
+      )
+
+  return(dat_client_CaseNotes_Model_Date_features)
+}
+
+
+#' Title
+#'
+#' @param dat_client_Match_Model dat_client_Match_Model
+#' @param dat_client_IMB_ANE_Model dat_client_IMB_ANE_Model
 #' @param dat_client_Syncronys_Model_Date dat_client_Syncronys_Model_Date
 #' @param date_Current date_Current
 #' @param sw_ANE_Current sw_ANE_Current
@@ -1213,11 +1412,13 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
 #' @param dat_client_RORA dat_client_RORA
 #' @param dat_client_Conduent_Omnicad dat_client_Conduent_Omnicad
 #' @param dat_client_BBS dat_client_BBS
+#' @param dat_client_CaseNotes dat_client_CaseNotes
 #' @param date_Current date_Current
 #' @param m_months_GER m_months_GER
 #' @param m_months_Syncronys m_months_Syncronys
 #' @param m_months_Conduent_Omnicad m_months_Conduent_Omnicad
 #' @param m_months_RORA m_months_RORA
+#' @param m_months_CaseNotes m_months_CaseNotes
 #'
 #' @return list_dat_each_Model_Date_features
 #' @export
@@ -1232,12 +1433,14 @@ dd_list_dat_each_Model_Date_features <-
     , dat_client_RORA               = dat_client_RORA
     , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
     , dat_client_BBS                = dat_client_BBS
+    , dat_client_CaseNotes          = dat_client_CaseNotes
     , date_Current                  = date_Current
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
     , m_months_RORA                 = m_months_RORA
     , m_months_BBS                  = m_months_BBS
+    , m_months_CaseNotes            = m_months_CaseNotes
   ) {
 
   dat_client_Match_Model <-
@@ -1269,6 +1472,12 @@ dd_list_dat_each_Model_Date_features <-
     dd_dat_client_BBS_Model(
       dat_client_BBS = dat_client_BBS
     )
+
+  dat_client_CaseNotes_Model <-
+    dd_dat_client_CaseNotes_Model(
+      dat_client_CaseNotes = dat_client_CaseNotes
+    )
+
 
   # Subset by date
   dat_client_GER_Model_Date <-
@@ -1310,6 +1519,15 @@ dd_list_dat_each_Model_Date_features <-
     , date_Current                = date_Current
     , sw_ANE_Current              = sw_ANE_Current
     )
+
+  dat_client_CaseNotes_Model_Date <-
+    dd_dat_client_CaseNotes_Model_Date(
+      dat_client_CaseNotes_Model  = dat_client_CaseNotes_Model
+    , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+    , date_Current                = date_Current
+    , sw_ANE_Current              = sw_ANE_Current
+    )
+
 
   # Features
   dat_client_GER_Model_Date_features <-
@@ -1362,6 +1580,16 @@ dd_list_dat_each_Model_Date_features <-
     , m_months_BBS                = m_months_BBS
     )
 
+  dat_client_CaseNotes_Model_Date_features <-
+    dd_dat_client_CaseNotes_Model_Date_features(
+      dat_client_Match_Model      = dat_client_Match_Model
+    , dat_client_IMB_ANE_Model    = dat_client_IMB_ANE_Model
+    , dat_client_CaseNotes_Model  = dat_client_CaseNotes_Model
+    , date_Current                = date_Current
+    , sw_ANE_Current              = sw_ANE_Current
+    , m_months_CaseNotes          = m_months_CaseNotes
+    )
+
 
   list_dat_each_Model_Date_features <-
     list(
@@ -1370,6 +1598,7 @@ dd_list_dat_each_Model_Date_features <-
     , Syncronys         = dat_client_Syncronys_Model_Date_features
     , Conduent_Omnicad  = dat_client_Conduent_Omnicad_Model_Date_features
     , BBS               = dat_client_BBS_Model_Date_features
+    , CaseNotes         = dat_client_CaseNotes_Model_Date_features
     )
 
   return(list_dat_each_Model_Date_features)
@@ -1396,6 +1625,7 @@ dd_dat_all_Model_ID <-
       , dat_client_Conduent_Omnicad_Model_Date_features
       , dat_client_RORA_Model_Date_features
       , dat_client_BBS_Model_Date_features
+      , dat_client_CaseNotes
       )
   , by_for_join = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
   ) {

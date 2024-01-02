@@ -49,6 +49,7 @@ dd_prediction_model <-
   , m_months_Conduent_Omnicad = "2 months"
   , m_months_RORA             = "2 months"
   , m_months_BBS              = "12 months"
+  , m_months_CaseNotes        = "2 months"
   , sw_rfsrc_ntree            = 500
   , sw_alpha                  = 0.20
   ) {
@@ -79,6 +80,9 @@ dd_prediction_model <-
     , ", "
     , "BBS "
     , m_months_BBS               |> stringr::str_replace(pattern = " months", "mo")
+    , ", "
+    , "CaseNotes "
+    , m_months_CaseNotes         |> stringr::str_replace(pattern = " months", "mo")
     , ")"
     )
 
@@ -134,6 +138,55 @@ dd_prediction_model <-
     lubridate::as_date()
 
 
+  # ANE Before and After date_Current (for output file)
+  dat_client_IMB_ANE_before_after <-
+    dat_client_IMB_ANE |>
+    dplyr::mutate(
+      ANE_Before_First =
+        dplyr::case_when(
+          (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
+        , TRUE ~ NA #"No ANE Before"
+        )
+    , ANE_After_Last =
+        dplyr::case_when(
+          (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
+        , TRUE ~ NA #"No ANE After"
+        )
+    ) |>
+    dplyr::select(
+      Client_System_ID
+    , ANE_Before_First
+    , ANE_After_Last
+    ) |>
+    dplyr::distinct() |>
+    dplyr::group_by(
+      Client_System_ID
+    ) |>
+    dplyr::mutate(
+      ANE_Before_First = ANE_Before_First |> dplyr::first(na_rm = TRUE)
+    , ANE_After_Last   = ANE_After_Last   |> dplyr::last (na_rm = TRUE)
+    ) |>
+    #tidyr::fill(
+    #  ANE_Before_First
+    #, .direction = "updown"
+    #) |>
+    #tidyr::fill(
+    #  ANE_After_Last
+    #, .direction = "downup"
+    #) |>
+    dplyr::ungroup() |>
+    dplyr::distinct() |>
+    dplyr::right_join(
+      dat_client_Match |>
+      dplyr::select(
+        Client_System_ID
+      )
+    , by = dplyr::join_by(Client_System_ID)
+    )
+
+
+
+
   # ANE to train, Current to predict
   sw_ANE_Current <- c("ANE", "Current")[1]
 
@@ -149,12 +202,14 @@ dd_prediction_model <-
     , dat_client_RORA               = dat_client_RORA
     , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
     , dat_client_BBS                = dat_client_BBS
+    , dat_client_CaseNotes          = dat_client_CaseNotes
     , date_Current                  = date_Current
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
     , m_months_RORA                 = m_months_RORA
     , m_months_BBS                  = m_months_BBS
+    , m_months_CaseNotes            = m_months_CaseNotes
     )
 
   # Waiver subset
@@ -230,53 +285,6 @@ dd_prediction_model <-
 
 
 
-  # ANE Before and After date_Current
-  dat_client_IMB_ANE_before_after <-
-    dat_client_IMB_ANE |>
-    dplyr::mutate(
-      ANE_Before_First =
-        dplyr::case_when(
-          (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
-        , TRUE ~ NA #"No ANE Before"
-        )
-    , ANE_After_Last =
-        dplyr::case_when(
-          (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
-        , TRUE ~ NA #"No ANE After"
-        )
-    ) |>
-    dplyr::select(
-      Client_System_ID
-    , ANE_Before_First
-    , ANE_After_Last
-    ) |>
-    dplyr::distinct() |>
-    dplyr::group_by(
-      Client_System_ID
-    ) |>
-    dplyr::mutate(
-      ANE_Before_First = ANE_Before_First |> dplyr::first(na_rm = TRUE)
-    , ANE_After_Last   = ANE_After_Last   |> dplyr::last (na_rm = TRUE)
-    ) |>
-    #tidyr::fill(
-    #  ANE_Before_First
-    #, .direction = "updown"
-    #) |>
-    #tidyr::fill(
-    #  ANE_After_Last
-    #, .direction = "downup"
-    #) |>
-    dplyr::ungroup() |>
-    dplyr::distinct() |>
-    dplyr::right_join(
-      dat_client_Match |>
-      dplyr::select(
-        Client_System_ID
-      )
-    , by = dplyr::join_by(Client_System_ID)
-    )
-
-
   #dat_all_Model_ID_Train
   #dat_all_Model_ID_Train |> str()
   #dat_all_Model_ID_Train |> summary()
@@ -311,12 +319,14 @@ dd_prediction_model <-
     , dat_client_RORA               = dat_client_RORA
     , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
     , dat_client_BBS                = dat_client_BBS
+    , dat_client_CaseNotes          = dat_client_CaseNotes
     , date_Current                  = date_Current
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
     , m_months_RORA                 = m_months_RORA
     , m_months_BBS                  = m_months_BBS
+    , m_months_CaseNotes            = m_months_CaseNotes
     )
 
   # Waiver subset
