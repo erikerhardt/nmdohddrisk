@@ -7,7 +7,7 @@
 dd_dat_client_CaseNotes_Model_Date_features(
   dat_client_Match_Model = dat_client_Match_Model,
   dat_client_IMB_ANE_Model = dat_client_IMB_ANE_Model,
-  dat_client_CaseNotes_Model = dat_client_CaseNotes_Model,
+  dat_client_CaseNotes_Model_Date = dat_client_CaseNotes_Model_Date,
   date_Current = date_Current,
   sw_ANE_Current = c("ANE", "Current")[1],
   m_months_CaseNotes = m_months_CaseNotes
@@ -18,7 +18,7 @@ dd_dat_client_CaseNotes_Model_Date_features(
 
 \item{dat_client_IMB_ANE_Model}{dat_client_IMB_ANE_Model}
 
-\item{dat_client_CaseNotes_Model}{dat_client_CaseNotes_Model}
+\item{dat_client_CaseNotes_Model_Date}{dat_client_CaseNotes_Model_Date}
 
 \item{date_Current}{date_Current}
 
