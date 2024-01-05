@@ -1,16 +1,20 @@
 #' NM DOH DD Prediction Model, main predict and model function
 #'
-#' @param working_directory         Working directory
-#' @param path_prefix_out           Path and file prefix for output folders
-#' @param DD_Group                  All or specific Waiver group
-#' @param date_Current              Date for last day of data to use for analysis
-#' @param m_months_GER              GER       data, date range to keep, from first ANE or last observation back number of months
-#' @param m_months_Syncronys        Syncronys data, date range to keep, from first ANE or last observation back number of months
-#' @param m_months_Conduent_Omnicad Omnicad   data, date range to keep, from first ANE or last observation back number of months
-#' @param m_months_RORA             RORA      data, date range to keep, from first ANE or last observation back number of months
-#' @param m_months_BBS              BBS       data, date range to keep, from first ANE or last observation back number of months
-#' @param sw_rfsrc_ntree            Random forest, number of trees
-#' @param sw_alpha                  Random forest, model selection alpha level
+#' @param working_directory             Working directory
+#' @param path_prefix_out               Path and file prefix for output folders
+#' @param DD_Group                      All or specific Waiver group
+#' @param date_Current                  Date for last day of data to use for analysis
+#' @param m_months_GER                  GER       data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_Syncronys            Syncronys data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_Conduent_Omnicad     Omnicad   data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_RORA                 RORA      data, date range to keep, from first ANE or last observation back number of months
+#' @param m_months_BBS                  BBS       data, date range to keep, from first ANE or last observation back number of months
+#' @param sw_rfsrc_ntree                Random forest, number of trees
+#' @param sw_alpha                      Random forest, model selection alpha level
+#' @param sw_select_full                run RF with model selection, or only fit full model
+#' @param sw_imbalanced_binary          T/F input to \code{e_rfstr_classification()}, to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.
+#' @param sw_m_months_select_quick_full T/F to only search for best \code{m_months} arguments.
+#' @param sw_m_months_values            if \code{sw_m_months_select_quick_full == TRUE}, list of number of months for each data source to perform model selection on m_months arguments.  One strategy for search is to start with \code{c(1, 2)} and if the result is 1, then keep 1, otherwise try \code{c(2, 3)}, and so on for 4, 6, 9, and 12 months.  Increment only 4 values at a time for 16 processors.
 #'
 #' @return dat_client_RORA
 #' @importFrom stats predict
@@ -21,8 +25,12 @@
 #' @import lubridate
 #' @import stringr
 #' @import tidyr
+#' @import readr
 #' @import tidyselect
 #' @import parallel
+#' @import doParallel
+#' @import foreach
+#' @import tictoc
 #' @export
 #'
 #' @examples
@@ -39,19 +47,29 @@
 #' }
 dd_prediction_model <-
   function(
-    working_directory         = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
-  , path_prefix_out           = "out_V06"
-  , DD_Group                  = c("All", "DD", "MV", "MF")[1]
-  , date_Current              = "2023-09-06"
-    # Date range to keep previous to first ANE or last observation
-  , m_months_GER              = "6 months"
-  , m_months_Syncronys        = "2 months"
-  , m_months_Conduent_Omnicad = "2 months"
-  , m_months_RORA             = "2 months"
-  , m_months_BBS              = "12 months"
-  , m_months_CaseNotes        = "2 months"
-  , sw_rfsrc_ntree            = 500
-  , sw_alpha                  = 0.20
+    working_directory             = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
+  , path_prefix_out               = "out_V10"
+  , DD_Group                      = c("All", "DD", "MV", "MF")[1]
+  , date_Current                  = "2023-12-01"
+  , m_months_GER                  = "6 months"  # Date range to keep previous to first ANE or last observation
+  , m_months_Syncronys            = "2 months"
+  , m_months_Conduent_Omnicad     = "2 months"
+  , m_months_RORA                 = "2 months"
+  , m_months_BBS                  = "12 months"
+  , m_months_CaseNotes            = "2 months"
+  , sw_rfsrc_ntree                = 500
+  , sw_alpha                      = 0.20
+  , sw_select_full                = c("select", "full")[1]
+  , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
+  , sw_m_months_select_quick_full = FALSE
+  , sw_m_months_values            = list(  # or just FALSE
+                                      GER              = c(1, 2)
+                                    , Syncronys        = c(1, 2)
+                                    , Conduent_Omnicad = c(1)
+                                    , RORA             = c(1)
+                                    , BBS              = c(1)
+                                    , CaseNotes        = c(1)
+                                    )
   ) {
 
   name_analysis <-
@@ -190,121 +208,298 @@ dd_prediction_model <-
   # ANE to train, Current to predict
   sw_ANE_Current <- c("ANE", "Current")[1]
 
-  ## ----------------------------------------
-  # Train data
-  list_dat_each_Model_Date_features_Train <-
-    dd_list_dat_each_Model_Date_features(
-      sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
-    , dat_client_Match              = dat_client_Match
-    , dat_client_IMB_ANE            = dat_client_IMB_ANE
-    , dat_client_GER                = dat_client_GER
-    , dat_client_Syncronys          = dat_client_Syncronys
-    , dat_client_RORA               = dat_client_RORA
-    , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
-    , dat_client_BBS                = dat_client_BBS
-    , dat_client_CaseNotes          = dat_client_CaseNotes
-    , date_Current                  = date_Current
-    , m_months_GER                  = m_months_GER
-    , m_months_Syncronys            = m_months_Syncronys
-    , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
-    , m_months_RORA                 = m_months_RORA
-    , m_months_BBS                  = m_months_BBS
-    , m_months_CaseNotes            = m_months_CaseNotes
-    )
+  if (!sw_m_months_select_quick_full) {
 
-  # Waiver subset
-  if ( !(DD_Group == "All") ) {
-    for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
-      ## i_list = 3
-      list_dat_each_Model_Date_features_Train[[ i_list ]] <-
-        list_dat_each_Model_Date_features_Train[[ i_list ]] |>
-        dplyr::filter(
-          Client_Waiver == DD_Group
-        ) |>
-        dplyr::select(
-          -Client_Waiver
+    ## ----------------------------------------
+    # Train data
+    list_dat_each_Model_Date_features_Train <-
+      dd_list_dat_each_Model_Date_features(
+        sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
+      , dat_client_Match              = dat_client_Match
+      , dat_client_IMB_ANE            = dat_client_IMB_ANE
+      , dat_client_GER                = dat_client_GER
+      , dat_client_Syncronys          = dat_client_Syncronys
+      , dat_client_RORA               = dat_client_RORA
+      , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+      , dat_client_BBS                = dat_client_BBS
+      , dat_client_CaseNotes          = dat_client_CaseNotes
+      , date_Current                  = date_Current
+      , m_months_GER                  = m_months_GER
+      , m_months_Syncronys            = m_months_Syncronys
+      , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
+      , m_months_RORA                 = m_months_RORA
+      , m_months_BBS                  = m_months_BBS
+      , m_months_CaseNotes            = m_months_CaseNotes
+      )
+
+    # Waiver subset
+    if ( !(DD_Group == "All") ) {
+      for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
+        ## i_list = 3
+        list_dat_each_Model_Date_features_Train[[ i_list ]] <-
+          list_dat_each_Model_Date_features_Train[[ i_list ]] |>
+          dplyr::filter(
+            Client_Waiver == DD_Group
+          ) |>
+          dplyr::select(
+            -Client_Waiver
+          )
+      }
+    }
+
+    if ( DD_Group == "All" ) {
+      dat_all_Model_ID_Train <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Train
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+        )
+    } else {
+      dat_all_Model_ID_Train <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Train
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
         )
     }
-  }
-
-  if ( DD_Group == "All" ) {
-    dat_all_Model_ID_Train <-
-      dd_dat_all_Model_ID(
-        list_dat_features = list_dat_each_Model_Date_features_Train
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
-      )
-  } else {
-    dat_all_Model_ID_Train <-
-      dd_dat_all_Model_ID(
-        list_dat_features = list_dat_each_Model_Date_features_Train
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
-      )
-  }
 
 
-  # Projection plot
-  p_proj <-
-    e_plot_projection(
-      dat_plot                  =
-        dat_all_Model_ID_Train |>
-        dplyr::select(
-          -Client_System_ID
-        )
-    , var_group                 = "ANE_Substantiated"
-    , var_color                 = NULL
-    , var_shape                 = NULL
-    , var_facet                 = NULL #"Client_Waiver"
-    , text_title                = paste0("ANE Substantiated: ", name_analysis)
-    , sw_print                  = FALSE
-    , sw_projection             = c("umap", "tsne")[1]
-    , n_obs_sample              = NULL
-    )
-
-  ggsave(
-        file.path(
-          path_results_out
-        , path_prefix_out
-        , paste0(
-            path_prefix_out
-          , "__"
-          , "plot_projection_train"
-          , ".png"
+    # Projection plot
+    p_proj <-
+      e_plot_projection(
+        dat_plot                  =
+          dat_all_Model_ID_Train |>
+          dplyr::select(
+            -Client_System_ID
           )
+      , var_group                 = "ANE_Substantiated"
+      , var_color                 = NULL
+      , var_shape                 = NULL
+      , var_facet                 = NULL #"Client_Waiver"
+      , text_title                = paste0("ANE Substantiated: ", name_analysis)
+      , sw_print                  = FALSE
+      , sw_projection             = c("umap", "tsne")[1]
+      , n_obs_sample              = NULL
+      )
+
+    ggsave(
+          file.path(
+            path_results_out
+          , path_prefix_out
+          , paste0(
+              path_prefix_out
+            , "__"
+            , "plot_projection_train"
+            , ".png"
+            )
+          )
+      , plot   = p_proj
+      , width  = 10
+      , height = 10
+      ## png, jpeg
+      , dpi    = 300
+      , bg     = "white"
+      ## pdf
+      #, units  = "in"
+      #, useDingbats = FALSE
+      )
+
+
+
+
+    #dat_all_Model_ID_Train
+    #dat_all_Model_ID_Train |> str()
+    #dat_all_Model_ID_Train |> summary()
+
+    # Train model
+    out_e_rf_Model_DD_Train <-
+      e_rfsrc_classification(
+        dat_rf_class            = dat_all_Model_ID_Train
+      , rf_y_var                = NULL
+      , rf_x_var                = NULL
+      , rf_id_var               = "Client_System_ID"
+      , sw_rfsrc_ntree          = sw_rfsrc_ntree
+      , sw_alpha                = sw_alpha
+      , sw_select_full          = sw_select_full
+      , sw_save_model           = c(TRUE, FALSE)[2]
+      , plot_title              = name_analysis
+      , out_path                = file.path(path_results_out, path_prefix_out)
+      , file_prefix             = path_prefix_out
+      , plot_format             = c("png", "pdf")[1]
+      , n_marginal_plot_across  = 6
+      , sw_imbalanced_binary    = sw_imbalanced_binary
+      )
+  } # !sw_m_months_select_quick_full
+
+  # model selection
+  if (sw_m_months_select_quick_full) {
+
+    tab_m_months_iter <-
+      sw_m_months_values |>
+      expand.grid()
+
+    print("nmdohddrisk::dd_prediction_model:  m_months selection, iterates:")
+    print(tab_m_months_iter)
+
+    #library(doParallel)  # for %dopar% operator
+    num_cores <- parallel::detectCores() - 2
+    doParallel::registerDoParallel(num_cores)
+
+    tictoc::tic(msg = "Timer") # start timer
+
+    # don't prespecify the "results" list
+
+    results <-
+      foreach::foreach(
+        i_iter = seq_len(nrow(tab_m_months_iter))
+      #, .combine =                             # default is a list
+      , .inorder = TRUE                         # FALSE is faster
+      , .packages = c("nmdohddrisk", "erikmisc", "tidyverse")  # character vector of packages that the tasks depend on
+      , .export = NULL                          # character vector of variables to export
+      #) %do% # sequential
+      ) %dopar%  # parallel
+      {
+      ## i_iter = 1
+      row_iter <- tab_m_months_iter[i_iter, ]
+
+      ## ----------------------------------------
+      # Train data
+      list_dat_each_Model_Date_features_Train <-
+        dd_list_dat_each_Model_Date_features(
+          sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
+        , dat_client_Match              = dat_client_Match
+        , dat_client_IMB_ANE            = dat_client_IMB_ANE
+        , dat_client_GER                = dat_client_GER
+        , dat_client_Syncronys          = dat_client_Syncronys
+        , dat_client_RORA               = dat_client_RORA
+        , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
+        , dat_client_BBS                = dat_client_BBS
+        , dat_client_CaseNotes          = dat_client_CaseNotes
+        , date_Current                  = date_Current
+        , m_months_GER                  = row_iter$GER
+        , m_months_Syncronys            = row_iter$Syncronys
+        , m_months_Conduent_Omnicad     = row_iter$Conduent_Omnicad
+        , m_months_RORA                 = row_iter$RORA
+        , m_months_BBS                  = row_iter$BBS
+        , m_months_CaseNotes            = row_iter$CaseNotes
         )
-    , plot   = p_proj
-    , width  = 10
-    , height = 10
-    ## png, jpeg
-    , dpi    = 300
-    , bg     = "white"
-    ## pdf
-    #, units  = "in"
-    #, useDingbats = FALSE
-    )
+
+      # Waiver subset
+      if ( !(DD_Group == "All") ) {
+        for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
+          ## i_list = 3
+          list_dat_each_Model_Date_features_Train[[ i_list ]] <-
+            list_dat_each_Model_Date_features_Train[[ i_list ]] |>
+            dplyr::filter(
+              Client_Waiver == DD_Group
+            ) |>
+            dplyr::select(
+              -Client_Waiver
+            )
+        }
+      }
+
+      if ( DD_Group == "All" ) {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+          )
+      } else {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+          )
+      }
+
+      # Train model
+      out_e_rf_Model_DD_Train <-
+        e_rfsrc_classification(
+          dat_rf_class            = dat_all_Model_ID_Train
+        , rf_y_var                = NULL
+        , rf_x_var                = NULL
+        , rf_id_var               = "Client_System_ID"
+        , sw_rfsrc_ntree          = sw_rfsrc_ntree
+        , sw_alpha                = sw_alpha
+        , sw_select_full          = sw_select_full
+        , sw_save_model           = c(TRUE, FALSE)[2]
+        , plot_title              = name_analysis
+        , out_path                = file.path(path_results_out, path_prefix_out)
+        , file_prefix             = path_prefix_out
+        , plot_format             = c("png", "pdf")[1]
+        , n_marginal_plot_across  = 6
+        , sw_imbalanced_binary    = sw_imbalanced_binary
+        , sw_quick_full_only      = c(FALSE, TRUE)[2]
+        )
+
+      out <-
+        out_e_rf_Model_DD_Train$o_class_full_ROC$roc_curve_best$Yes |>
+        dplyr::mutate(
+          GER              = row_iter$GER
+        , Syncronys        = row_iter$Syncronys
+        , Conduent_Omnicad = row_iter$Conduent_Omnicad
+        , RORA             = row_iter$RORA
+        , BBS              = row_iter$BBS
+        , CaseNotes        = row_iter$CaseNotes
+        ) |>
+        dplyr::relocate(
+          GER
+        , Syncronys
+        , Conduent_Omnicad
+        , RORA
+        , BBS
+        , CaseNotes
+        )
 
 
+      # use a return value
+      return( out )
 
+    } # foreach
 
-  #dat_all_Model_ID_Train
-  #dat_all_Model_ID_Train |> str()
-  #dat_all_Model_ID_Train |> summary()
+    print(tictoc::toc()) # end timer
 
-  # Train model
-  out_e_rf_Model_DD_Train <-
-    e_rfsrc_classification(
-      dat_rf_class    = dat_all_Model_ID_Train
-    , rf_y_var        = NULL
-    , rf_x_var        = NULL
-    , rf_id_var       = "Client_System_ID"
-    , sw_rfsrc_ntree  = sw_rfsrc_ntree
-    , sw_alpha        = sw_alpha
-    , sw_save_model   = c(TRUE, FALSE)[2]
-    , plot_title      = name_analysis
-    , out_path        = file.path(path_results_out, path_prefix_out)
-    , file_prefix     = path_prefix_out
-    , plot_format     = c("png", "pdf")[1]
-    , n_marginal_plot_across = 6
-    )
+    # explicitly close the implicitly created cluster
+    doParallel::stopImplicitCluster()
+
+    out_results <-
+      results |>
+      dplyr::bind_rows() |>
+      dplyr::arrange(
+        dplyr::desc(`Geom Mean`)
+      ) |>
+      dplyr::relocate(
+        `Geom Mean`
+      , .after = "Group"
+      )
+
+    readr::write_csv(
+        x = out_results
+      , file =
+          file.path(
+            path_results_out
+          , path_prefix_out
+          , paste0(
+              paste0(
+                path_prefix_out
+              , "__"
+              , "m_months_selection__"
+              , DD_Group
+              , "_"
+              , date_Current
+              , "_"
+              , Sys.time()
+              ) |>
+              stringr::str_replace_all("[^[:alnum:]]", "_")
+              #stringr::str_replace_all("[[:punct:]]", "_")
+            , ".csv"
+            )
+          )
+      )
+
+    return(out_results)
+
+  } # sw_m_months_select_quick_full
+
 
 
   ## ----------------------------------------
@@ -495,7 +690,7 @@ dd_prediction_model <-
         )
     )
   readr::write_csv(
-      dat_all_Model_ID_Predict_out_all
+      x    = dat_all_Model_ID_Predict_out_all
     , file =
         file.path(
           path_results_out
@@ -510,7 +705,7 @@ dd_prediction_model <-
     )
 
   readr::write_csv(
-      dat_all_Model_ID_Predict_out
+      x    = dat_all_Model_ID_Predict_out
     , file =
         file.path(
           path_results_out

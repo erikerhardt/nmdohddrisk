@@ -7,9 +7,9 @@
 dd_prediction_model(
   working_directory =
     "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts",
-  path_prefix_out = "out_V06",
+  path_prefix_out = "out_V10",
   DD_Group = c("All", "DD", "MV", "MF")[1],
-  date_Current = "2023-09-06",
+  date_Current = "2023-12-01",
   m_months_GER = "6 months",
   m_months_Syncronys = "2 months",
   m_months_Conduent_Omnicad = "2 months",
@@ -17,7 +17,12 @@ dd_prediction_model(
   m_months_BBS = "12 months",
   m_months_CaseNotes = "2 months",
   sw_rfsrc_ntree = 500,
-  sw_alpha = 0.2
+  sw_alpha = 0.2,
+  sw_select_full = c("select", "full")[1],
+  sw_imbalanced_binary = c(FALSE, TRUE)[1],
+  sw_m_months_select_quick_full = FALSE,
+  sw_m_months_values = list(GER = c(1, 2), Syncronys = c(1, 2), Conduent_Omnicad = c(1),
+    RORA = c(1), BBS = c(1), CaseNotes = c(1))
 )
 }
 \arguments{
@@ -42,6 +47,14 @@ dd_prediction_model(
 \item{sw_rfsrc_ntree}{Random forest, number of trees}
 
 \item{sw_alpha}{Random forest, model selection alpha level}
+
+\item{sw_select_full}{run RF with model selection, or only fit full model}
+
+\item{sw_imbalanced_binary}{T/F input to \code{e_rfstr_classification()}, to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.}
+
+\item{sw_m_months_select_quick_full}{T/F to only search for best \code{m_months} arguments.}
+
+\item{sw_m_months_values}{if \code{sw_m_months_select_quick_full == TRUE}, list of number of months for each data source to perform model selection on m_months arguments.  One strategy for search is to start with \code{c(1, 2)} and if the result is 1, then keep 1, otherwise try \code{c(2, 3)}, and so on for 4, 6, 9, and 12 months.  Increment only 4 values at a time for 16 processors.}
 }
 \value{
 dat_client_RORA
