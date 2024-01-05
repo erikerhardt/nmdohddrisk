@@ -160,12 +160,12 @@ dd_prediction_model <-
   dat_client_IMB_ANE_before_after <-
     dat_client_IMB_ANE |>
     dplyr::mutate(
-      ANE_Before_First =
+      ANE_Before =
         dplyr::case_when(
           (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
         , TRUE ~ NA #"No ANE Before"
         )
-    , ANE_After_Last =
+    , ANE_After =
         dplyr::case_when(
           (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
         , TRUE ~ NA #"No ANE After"
@@ -173,16 +173,20 @@ dd_prediction_model <-
     ) |>
     dplyr::select(
       Client_System_ID
-    , ANE_Before_First
-    , ANE_After_Last
+    , ANE_Before
+    , ANE_After
     ) |>
     dplyr::distinct() |>
     dplyr::group_by(
       Client_System_ID
     ) |>
-    dplyr::mutate(
-      ANE_Before_First = ANE_Before_First |> dplyr::first(na_rm = TRUE)
-    , ANE_After_Last   = ANE_After_Last   |> dplyr::last (na_rm = TRUE)
+    dplyr::summarize(
+      ANE_Before_First = ANE_Before |> dplyr::first(na_rm = TRUE)
+    , ANE_Before_Last  = ANE_Before |> dplyr::last (na_rm = TRUE)
+    , ANE_After_First  = ANE_After  |> dplyr::first(na_rm = TRUE)
+    , ANE_After_Last   = ANE_After  |> dplyr::last (na_rm = TRUE)
+    , ANE_Before_First = dplyr::case_when(!(ANE_Before_First == ANE_Before_Last) ~ ANE_Before_First, TRUE ~ NA)
+    , ANE_After_Last   = dplyr::case_when(!(ANE_After_First  == ANE_After_Last ) ~ ANE_After_Last  , TRUE ~ NA)
     ) |>
     #tidyr::fill(
     #  ANE_Before_First
@@ -200,21 +204,28 @@ dd_prediction_model <-
         Client_System_ID
       )
     , by = dplyr::join_by(Client_System_ID)
+    ) |>
+    dplyr::select(
+      Client_System_ID
+    , ANE_Before_First
+    , ANE_Before_Last
+    , ANE_After_First
+    , ANE_After_Last
     )
 
 
 
 
-  # ANE to train, Current to predict
-  sw_ANE_Current <- c("ANE", "Current")[1]
-
   if (!sw_m_months_select_quick_full) {
 
     ## ----------------------------------------
     # Train data
+
+    # The unit of analysis is (Client_System_ID, ANE_Date)
+
     list_dat_each_Model_Date_features_Train <-
       dd_list_dat_each_Model_Date_features(
-        sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
+        sw_ANE_Current                = c("ANE", "Current")[1]    # "ANE" to train, "Current" to predict
       , dat_client_Match              = dat_client_Match
       , dat_client_IMB_ANE            = dat_client_IMB_ANE
       , dat_client_GER                = dat_client_GER
@@ -251,15 +262,25 @@ dd_prediction_model <-
       dat_all_Model_ID_Train <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
         )
     } else {
       dat_all_Model_ID_Train <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
         )
     }
+
+    # The unit of analysis is (Client_System_ID, ANE_Date)
+    dat_all_Model_ID_Train <-
+      dat_all_Model_ID_Train |>
+      tidyr::unite(
+        "Client_System_ID__ANE_Date"
+      , Client_System_ID
+      , ANE_Date
+      , sep = "__"
+      )
 
 
     # Projection plot
@@ -268,7 +289,9 @@ dd_prediction_model <-
         dat_plot                  =
           dat_all_Model_ID_Train |>
           dplyr::select(
-            -Client_System_ID
+            -Client_System_ID__ANE_Date
+          #  -Client_System_ID
+          #, -ANE_Date
           )
       , var_group                 = "ANE_Substantiated"
       , var_color                 = NULL
@@ -315,7 +338,7 @@ dd_prediction_model <-
         dat_rf_class            = dat_all_Model_ID_Train
       , rf_y_var                = NULL
       , rf_x_var                = NULL
-      , rf_id_var               = "Client_System_ID"
+      , rf_id_var               = "Client_System_ID__ANE_Date"  # "Client_System_ID"
       , sw_rfsrc_ntree          = sw_rfsrc_ntree
       , sw_alpha                = sw_alpha
       , sw_select_full          = sw_select_full
@@ -364,7 +387,7 @@ dd_prediction_model <-
       # Train data
       list_dat_each_Model_Date_features_Train <-
         dd_list_dat_each_Model_Date_features(
-          sw_ANE_Current                = c("ANE", "Current")[1]      # ANE to train, Current to predict
+          sw_ANE_Current                = c("ANE", "Current")[1]    # "ANE" to train, "Current" to predict
         , dat_client_Match              = dat_client_Match
         , dat_client_IMB_ANE            = dat_client_IMB_ANE
         , dat_client_GER                = dat_client_GER
@@ -506,7 +529,7 @@ dd_prediction_model <-
   # Predict data
   list_dat_each_Model_Date_features_Predict <-
     dd_list_dat_each_Model_Date_features(
-      sw_ANE_Current                = c("ANE", "Current")[2]      # ANE to train, Current to predict
+      sw_ANE_Current                = c("ANE", "Current")[2]    # "ANE" to train, "Current" to predict
     , dat_client_Match              = dat_client_Match
     , dat_client_IMB_ANE            = dat_client_IMB_ANE
     , dat_client_GER                = dat_client_GER
@@ -543,13 +566,13 @@ dd_prediction_model <-
     dat_all_Model_ID_Predict <-
       dd_dat_all_Model_ID(
         list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
       )
   } else {
     dat_all_Model_ID_Predict <-
       dd_dat_all_Model_ID(
         list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
       )
   }
 
@@ -659,11 +682,14 @@ dd_prediction_model <-
     , Class
     , Sens
     , Spec
+    , date_of_run
     , date_Current
     , ANE_Before_First
+    , ANE_Before_Last
+    , ANE_After_First
     , ANE_After_Last
-    , Client_SSN
     , Client_Waiver
+    , Client_SSN
     , Client_Res_Addr_Line_1
     , Client_Res_Addr_Line_2
     , Client_Res_Addr_City
@@ -671,7 +697,6 @@ dd_prediction_model <-
     , Client_Res_Addr_Zip_5
     , Client_Res_Addr_Zip_4
     , Client_County
-    , date_of_run
     )
 
 
@@ -832,4 +857,4 @@ dd_prediction_model <-
 
   invisible(NULL)
 
-} # dd_read_client_RORA
+} # dd_prediction_model
