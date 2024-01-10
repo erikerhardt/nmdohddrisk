@@ -40,6 +40,7 @@ dd_dat_client_Match_Model <-
 #' Title
 #'
 #' @param dat_client_IMB_ANE dat_client_IMB_ANE
+#' @param sw_unit_of_analysis sw_unit_of_analysis
 #'
 #' @return dat_client_IMB_ANE_Model
 #' @import dplyr
@@ -47,7 +48,8 @@ dd_dat_client_Match_Model <-
 #'
 dd_dat_client_IMB_ANE_Model <-
   function(
-    dat_client_IMB_ANE = dat_client_IMB_ANE
+    dat_client_IMB_ANE  = dat_client_IMB_ANE
+  , sw_unit_of_analysis = sw_unit_of_analysis
   ) {
 
   dat_client_IMB_ANE_Model <-
@@ -60,18 +62,39 @@ dd_dat_client_IMB_ANE_Model <-
       Client_System_ID
     , Date
     #, dplyr::desc(ANE_Substantiated)
-    ) |>
-    dplyr::group_by(
-      Client_System_ID
-    ) |>
-    dplyr::distinct() |>
-    #dplyr::slice(         # to only use first ANE instance; better to use them all
-    #  1
-    #) |>
-    dplyr::ungroup() |>
-    dplyr::rename(
-      ANE_Date = Date
     )
+
+  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
+    dat_client_IMB_ANE_Model <-
+      dat_client_IMB_ANE_Model |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::distinct() |>
+      dplyr::slice(         # to only use first ANE instance
+        1
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::rename(
+        ANE_Date = Date
+      )
+  } # "Client_System_ID"
+
+  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
+    dat_client_IMB_ANE_Model <-
+      dat_client_IMB_ANE_Model |>
+      dplyr::group_by(
+        Client_System_ID
+      ) |>
+      dplyr::distinct() |>
+      #dplyr::slice(         # to only use first ANE instance; NOT (1/10/2024) better to use them all
+      #  1
+      #) |>
+      dplyr::ungroup() |>
+      dplyr::rename(
+        ANE_Date = Date
+      )
+  } # "Client_System_ID__ANE_Date"
 
   return(dat_client_IMB_ANE_Model)
 }
@@ -1450,6 +1473,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
 #' @param dat_client_BBS dat_client_BBS
 #' @param dat_client_CaseNotes dat_client_CaseNotes
 #' @param date_Current date_Current
+#' @param sw_unit_of_analysis sw_unit_of_analysis
 #' @param m_months_GER m_months_GER
 #' @param m_months_Syncronys m_months_Syncronys
 #' @param m_months_Conduent_Omnicad m_months_Conduent_Omnicad
@@ -1471,6 +1495,7 @@ dd_list_dat_each_Model_Date_features <-
     , dat_client_BBS                = dat_client_BBS
     , dat_client_CaseNotes          = dat_client_CaseNotes
     , date_Current                  = date_Current
+    , sw_unit_of_analysis           = sw_unit_of_analysis
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
@@ -1486,7 +1511,8 @@ dd_list_dat_each_Model_Date_features <-
 
   dat_client_IMB_ANE_Model <-
     dd_dat_client_IMB_ANE_Model(
-      dat_client_IMB_ANE = dat_client_IMB_ANE
+      dat_client_IMB_ANE  = dat_client_IMB_ANE
+    , sw_unit_of_analysis = sw_unit_of_analysis
     )
 
   dat_client_GER_Model <-

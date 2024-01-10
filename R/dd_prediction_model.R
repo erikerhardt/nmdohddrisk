@@ -11,6 +11,7 @@
 #' @param m_months_BBS                  BBS       data, date range to keep, from first ANE or last observation back number of months
 #' @param sw_rfsrc_ntree                passed to \code{e_rfstr_classification()}, Random forest, number of trees
 #' @param sw_alpha                      passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level
+#' @param sw_unit_of_analysis           ID for first ANE or (ID, Date) for all ANE.
 #' @param sw_select_full                passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model
 #' @param var_subgroup_analysis         passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none
 #' @param sw_imbalanced_binary          passed to \code{e_rfstr_classification()}, T/F to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.
@@ -60,6 +61,7 @@ dd_prediction_model <-
   , m_months_CaseNotes            = "2 months"
   , sw_rfsrc_ntree                = 500
   , sw_alpha                      = 0.20
+  , sw_unit_of_analysis           = c("Client_System_ID", "Client_System_ID__ANE_Date")[1]
   , sw_select_full                = c("select", "full")[1]
   , var_subgroup_analysis         = "Client_Waiver"
   , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
@@ -237,6 +239,7 @@ dd_prediction_model <-
       , dat_client_BBS                = dat_client_BBS
       , dat_client_CaseNotes          = dat_client_CaseNotes
       , date_Current                  = date_Current
+      , sw_unit_of_analysis           = sw_unit_of_analysis
       , m_months_GER                  = m_months_GER
       , m_months_Syncronys            = m_months_Syncronys
       , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
@@ -260,29 +263,60 @@ dd_prediction_model <-
       }
     }
 
-    if ( DD_Group == "All" ) {
-      dat_all_Model_ID_Train <-
-        dd_dat_all_Model_ID(
-          list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
-        )
-    } else {
-      dat_all_Model_ID_Train <-
-        dd_dat_all_Model_ID(
-          list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
-        )
-    }
 
-    # The unit of analysis is (Client_System_ID, ANE_Date)
-    dat_all_Model_ID_Train <-
-      dat_all_Model_ID_Train |>
-      tidyr::unite(
-        "Client_System_ID__ANE_Date"
-      , Client_System_ID
-      , ANE_Date
-      , sep = "__"
-      )
+    if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
+
+      # remove ANE_Date
+      ## lapply(list_dat_each_Model_Date_features_Train, str)
+      for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
+        list_dat_each_Model_Date_features_Train[[ i_list ]] <-
+          list_dat_each_Model_Date_features_Train[[ i_list ]] |>
+          dplyr::select(
+            -tidyselect::all_of("ANE_Date")
+          )
+      }
+
+      if ( DD_Group == "All" ) {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+          )
+      } else {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
+          )
+      }
+
+    } # "Client_System_ID"
+    if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
+
+      if ( DD_Group == "All" ) {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+          )
+      } else {
+        dat_all_Model_ID_Train <-
+          dd_dat_all_Model_ID(
+            list_dat_features = list_dat_each_Model_Date_features_Train
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
+          )
+      }
+
+      # The unit of analysis is (Client_System_ID, ANE_Date)
+      dat_all_Model_ID_Train <-
+        dat_all_Model_ID_Train |>
+        tidyr::unite(
+          "Client_System_ID__ANE_Date"
+        , Client_System_ID
+        , ANE_Date
+        , sep = "__"
+        )
+    } # "Client_System_ID__ANE_Date"
 
 
     # Projection plot
@@ -291,9 +325,13 @@ dd_prediction_model <-
         dat_plot                  =
           dat_all_Model_ID_Train |>
           dplyr::select(
-            -Client_System_ID__ANE_Date
-          #  -Client_System_ID
-          #, -ANE_Date
+            -tidyselect::any_of(
+              c(
+                "Client_System_ID__ANE_Date"
+              , "Client_System_ID"
+              , "ANE_Date"
+              )
+            )
           )
       , var_group                 = "ANE_Substantiated"
       , var_color                 = NULL
@@ -340,7 +378,7 @@ dd_prediction_model <-
         dat_rf_class            = dat_all_Model_ID_Train
       , rf_y_var                = NULL
       , rf_x_var                = NULL
-      , rf_id_var               = "Client_System_ID__ANE_Date"  # "Client_System_ID"
+      , rf_id_var               = sw_unit_of_analysis   #"Client_System_ID__ANE_Date"  # "Client_System_ID"
       , sw_rfsrc_ntree          = sw_rfsrc_ntree
       , sw_alpha                = sw_alpha
       , sw_select_full          = sw_select_full
@@ -544,6 +582,7 @@ dd_prediction_model <-
     , dat_client_BBS                = dat_client_BBS
     , dat_client_CaseNotes          = dat_client_CaseNotes
     , date_Current                  = date_Current
+    , sw_unit_of_analysis           = sw_unit_of_analysis
     , m_months_GER                  = m_months_GER
     , m_months_Syncronys            = m_months_Syncronys
     , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
@@ -567,19 +606,75 @@ dd_prediction_model <-
     }
   }
 
-  if ( DD_Group == "All" ) {
+  # if ( DD_Group == "All" ) {
+  #   dat_all_Model_ID_Predict <-
+  #     dd_dat_all_Model_ID(
+  #       list_dat_features = list_dat_each_Model_Date_features_Predict
+  #     , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+  #     )
+  # } else {
+  #   dat_all_Model_ID_Predict <-
+  #     dd_dat_all_Model_ID(
+  #       list_dat_features = list_dat_each_Model_Date_features_Predict
+  #     , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
+  #     )
+  # }
+
+  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
+
+    # remove ANE_Date
+    ## lapply(list_dat_each_Model_Date_features_Predict, str)
+    for (i_list in seq_len(length(list_dat_each_Model_Date_features_Predict))) {
+      list_dat_each_Model_Date_features_Predict[[ i_list ]] <-
+        list_dat_each_Model_Date_features_Predict[[ i_list ]] |>
+        dplyr::select(
+          -tidyselect::all_of("ANE_Date")
+        )
+    }
+
+    if ( DD_Group == "All" ) {
+      dat_all_Model_ID_Predict <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Predict
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+        )
+    } else {
+      dat_all_Model_ID_Predict <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Predict
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
+        )
+    }
+
+  } # "Client_System_ID"
+  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
+
+    if ( DD_Group == "All" ) {
+      dat_all_Model_ID_Predict <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Predict
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+        )
+    } else {
+      dat_all_Model_ID_Predict <-
+        dd_dat_all_Model_ID(
+          list_dat_features = list_dat_each_Model_Date_features_Predict
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
+        )
+    }
+
+    # The unit of analysis is (Client_System_ID, ANE_Date)
     dat_all_Model_ID_Predict <-
-      dd_dat_all_Model_ID(
-        list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
+      dat_all_Model_ID_Predict |>
+      tidyr::unite(
+        "Client_System_ID__ANE_Date"
+      , Client_System_ID
+      , ANE_Date
+      , sep = "__"
       )
-  } else {
-    dat_all_Model_ID_Predict <-
-      dd_dat_all_Model_ID(
-        list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
-      )
-  }
+  } # "Client_System_ID__ANE_Date"
+
+
 
 
   dat_all_Model_ID_Predict <-
@@ -814,6 +909,7 @@ dd_prediction_model <-
     #, units  = "in"
     #, useDingbats = FALSE
     )
+
 
   # Projection plot
   p_proj <-

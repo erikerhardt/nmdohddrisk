@@ -4,10 +4,15 @@
 \alias{dd_dat_client_IMB_ANE_Model}
 \title{Title}
 \usage{
-dd_dat_client_IMB_ANE_Model(dat_client_IMB_ANE = dat_client_IMB_ANE)
+dd_dat_client_IMB_ANE_Model(
+  dat_client_IMB_ANE = dat_client_IMB_ANE,
+  sw_unit_of_analysis = sw_unit_of_analysis
+)
 }
 \arguments{
 \item{dat_client_IMB_ANE}{dat_client_IMB_ANE}
+
+\item{sw_unit_of_analysis}{sw_unit_of_analysis}
 }
 \value{
 dat_client_IMB_ANE_Model

@@ -18,6 +18,7 @@ dd_prediction_model(
   m_months_CaseNotes = "2 months",
   sw_rfsrc_ntree = 500,
   sw_alpha = 0.2,
+  sw_unit_of_analysis = c("Client_System_ID", "Client_System_ID__ANE_Date")[1],
   sw_select_full = c("select", "full")[1],
   var_subgroup_analysis = "Client_Waiver",
   sw_imbalanced_binary = c(FALSE, TRUE)[1],
@@ -48,6 +49,8 @@ dd_prediction_model(
 \item{sw_rfsrc_ntree}{passed to \code{e_rfstr_classification()}, Random forest, number of trees}
 
 \item{sw_alpha}{passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level}
+
+\item{sw_unit_of_analysis}{ID for first ANE or (ID, Date) for all ANE.}
 
 \item{sw_select_full}{passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model}
 

@@ -15,6 +15,7 @@ dd_list_dat_each_Model_Date_features(
   dat_client_BBS = dat_client_BBS,
   dat_client_CaseNotes = dat_client_CaseNotes,
   date_Current = date_Current,
+  sw_unit_of_analysis = sw_unit_of_analysis,
   m_months_GER = m_months_GER,
   m_months_Syncronys = m_months_Syncronys,
   m_months_Conduent_Omnicad = m_months_Conduent_Omnicad,
@@ -43,6 +44,8 @@ dd_list_dat_each_Model_Date_features(
 \item{dat_client_CaseNotes}{dat_client_CaseNotes}
 
 \item{date_Current}{date_Current}
+
+\item{sw_unit_of_analysis}{sw_unit_of_analysis}
 
 \item{m_months_GER}{m_months_GER}
 
