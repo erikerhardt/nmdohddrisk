@@ -19,6 +19,7 @@ dd_prediction_model(
   sw_rfsrc_ntree = 500,
   sw_alpha = 0.2,
   sw_select_full = c("select", "full")[1],
+  var_subgroup_analysis = "Client_Waiver",
   sw_imbalanced_binary = c(FALSE, TRUE)[1],
   sw_m_months_select_quick_full = FALSE,
   sw_m_months_values = list(GER = c(1, 2), Syncronys = c(1, 2), Conduent_Omnicad = c(1),
@@ -44,13 +45,15 @@ dd_prediction_model(
 
 \item{m_months_BBS}{BBS       data, date range to keep, from first ANE or last observation back number of months}
 
-\item{sw_rfsrc_ntree}{Random forest, number of trees}
+\item{sw_rfsrc_ntree}{passed to \code{e_rfstr_classification()}, Random forest, number of trees}
 
-\item{sw_alpha}{Random forest, model selection alpha level}
+\item{sw_alpha}{passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level}
 
-\item{sw_select_full}{run RF with model selection, or only fit full model}
+\item{sw_select_full}{passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model}
 
-\item{sw_imbalanced_binary}{T/F input to \code{e_rfstr_classification()}, to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.}
+\item{var_subgroup_analysis}{passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none}
+
+\item{sw_imbalanced_binary}{passed to \code{e_rfstr_classification()}, T/F to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.}
 
 \item{sw_m_months_select_quick_full}{T/F to only search for best \code{m_months} arguments.}
 

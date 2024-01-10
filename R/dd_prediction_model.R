@@ -9,10 +9,11 @@
 #' @param m_months_Conduent_Omnicad     Omnicad   data, date range to keep, from first ANE or last observation back number of months
 #' @param m_months_RORA                 RORA      data, date range to keep, from first ANE or last observation back number of months
 #' @param m_months_BBS                  BBS       data, date range to keep, from first ANE or last observation back number of months
-#' @param sw_rfsrc_ntree                Random forest, number of trees
-#' @param sw_alpha                      Random forest, model selection alpha level
-#' @param sw_select_full                run RF with model selection, or only fit full model
-#' @param sw_imbalanced_binary          T/F input to \code{e_rfstr_classification()}, to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.
+#' @param sw_rfsrc_ntree                passed to \code{e_rfstr_classification()}, Random forest, number of trees
+#' @param sw_alpha                      passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level
+#' @param sw_select_full                passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model
+#' @param var_subgroup_analysis         passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none
+#' @param sw_imbalanced_binary          passed to \code{e_rfstr_classification()}, T/F to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.
 #' @param sw_m_months_select_quick_full T/F to only search for best \code{m_months} arguments.
 #' @param sw_m_months_values            if \code{sw_m_months_select_quick_full == TRUE}, list of number of months for each data source to perform model selection on m_months arguments.  One strategy for search is to start with \code{c(1, 2)} and if the result is 1, then keep 1, otherwise try \code{c(2, 3)}, and so on for 4, 6, 9, and 12 months.  Increment only 4 values at a time for 16 processors.
 #'
@@ -60,6 +61,7 @@ dd_prediction_model <-
   , sw_rfsrc_ntree                = 500
   , sw_alpha                      = 0.20
   , sw_select_full                = c("select", "full")[1]
+  , var_subgroup_analysis         = "Client_Waiver"
   , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
   , sw_m_months_select_quick_full = FALSE
   , sw_m_months_values            = list(  # or just FALSE
@@ -262,13 +264,13 @@ dd_prediction_model <-
       dat_all_Model_ID_Train <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
         )
     } else {
       dat_all_Model_ID_Train <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Train
-        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+        , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
         )
     }
 
@@ -346,9 +348,11 @@ dd_prediction_model <-
       , plot_title              = name_analysis
       , out_path                = file.path(path_results_out, path_prefix_out)
       , file_prefix             = path_prefix_out
+      , var_subgroup_analysis   = var_subgroup_analysis
       , plot_format             = c("png", "pdf")[1]
       , n_marginal_plot_across  = 6
       , sw_imbalanced_binary    = sw_imbalanced_binary
+      , sw_quick_full_only      = c(FALSE, TRUE)[1]
       )
   } # !sw_m_months_select_quick_full
 
@@ -424,13 +428,13 @@ dd_prediction_model <-
         dat_all_Model_ID_Train <-
           dd_dat_all_Model_ID(
             list_dat_features = list_dat_each_Model_Date_features_Train
-          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
           )
       } else {
         dat_all_Model_ID_Train <-
           dd_dat_all_Model_ID(
             list_dat_features = list_dat_each_Model_Date_features_Train
-          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+          , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
           )
       }
 
@@ -448,6 +452,7 @@ dd_prediction_model <-
         , plot_title              = name_analysis
         , out_path                = file.path(path_results_out, path_prefix_out)
         , file_prefix             = path_prefix_out
+        , var_subgroup_analysis   = var_subgroup_analysis
         , plot_format             = c("png", "pdf")[1]
         , n_marginal_plot_across  = 6
         , sw_imbalanced_binary    = sw_imbalanced_binary
@@ -566,13 +571,13 @@ dd_prediction_model <-
     dat_all_Model_ID_Predict <-
       dd_dat_all_Model_ID(
         list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Age)
+      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Waiver, Client_Age)
       )
   } else {
     dat_all_Model_ID_Predict <-
       dd_dat_all_Model_ID(
         list_dat_features = list_dat_each_Model_Date_features_Predict
-      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+      , by_for_join       = dplyr::join_by(ANE_Substantiated, Client_System_ID, ANE_Date, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
       )
   }
 
