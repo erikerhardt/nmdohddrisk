@@ -15,6 +15,7 @@
 #' @param sw_select_full                passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model
 #' @param var_subgroup_analysis         passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none
 #' @param sw_imbalanced_binary          passed to \code{e_rfstr_classification()}, T/F to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.
+#' @param sw_quick_full_only            passed to \code{e_rfstr_classification()}, T/F to only fit full model and return model object
 #' @param sw_m_months_select_quick_full T/F to only search for best \code{m_months} arguments.
 #' @param sw_m_months_values            if \code{sw_m_months_select_quick_full == TRUE}, list of number of months for each data source to perform model selection on m_months arguments.  One strategy for search is to start with \code{c(1, 2)} and if the result is 1, then keep 1, otherwise try \code{c(2, 3)}, and so on for 4, 6, 9, and 12 months.  Increment only 4 values at a time for 16 processors.
 #'
@@ -65,6 +66,7 @@ dd_prediction_model <-
   , sw_select_full                = c("select", "full")[1]
   , var_subgroup_analysis         = "Client_Waiver"
   , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
+  , sw_quick_full_only            = c(FALSE, TRUE)[1]
   , sw_m_months_select_quick_full = FALSE
   , sw_m_months_values            = list(  # or just FALSE
                                       GER              = c(1, 2)
@@ -314,15 +316,15 @@ dd_prediction_model <-
 
     if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
 
-      # remove ANE_Date
-      ## lapply(list_dat_each_Model_Date_features_Train, str)
-      for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
-        list_dat_each_Model_Date_features_Train[[ i_list ]] <-
-          list_dat_each_Model_Date_features_Train[[ i_list ]] |>
-          dplyr::select(
-            -tidyselect::all_of("ANE_Date")
-          )
-      }
+      #firstANE# # remove ANE_Date
+      #firstANE# ## lapply(list_dat_each_Model_Date_features_Train, str)
+      #firstANE# for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
+      #firstANE#   list_dat_each_Model_Date_features_Train[[ i_list ]] <-
+      #firstANE#     list_dat_each_Model_Date_features_Train[[ i_list ]] |>
+      #firstANE#     dplyr::select(
+      #firstANE#       -tidyselect::all_of("ANE_Date")
+      #firstANE#     )
+      #firstANE# }
 
       if ( DD_Group == "All" ) {
         dat_all_Model_ID_Train <-
@@ -438,8 +440,14 @@ dd_prediction_model <-
       , plot_format             = c("png", "pdf")[1]
       , n_marginal_plot_across  = 6
       , sw_imbalanced_binary    = sw_imbalanced_binary
-      , sw_quick_full_only      = c(FALSE, TRUE)[1]
+      , sw_quick_full_only      = sw_quick_full_only
       )
+
+    if (sw_quick_full_only) {
+      out_e_rf_Model_DD_Train$o_class_sel     <- out_e_rf_Model_DD_Train$o_class_full
+      out_e_rf_Model_DD_Train$o_class_sel_ROC <- out_e_rf_Model_DD_Train$o_class_full_ROC
+    }
+
   } # !sw_m_months_select_quick_full
 
   # model selection
@@ -542,7 +550,7 @@ dd_prediction_model <-
         , plot_format             = c("png", "pdf")[1]
         , n_marginal_plot_across  = 6
         , sw_imbalanced_binary    = sw_imbalanced_binary
-        , sw_quick_full_only      = c(FALSE, TRUE)[2]
+        , sw_quick_full_only      = sw_quick_full_only
         )
 
       out <-
@@ -670,15 +678,15 @@ dd_prediction_model <-
 
   if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
 
-    # remove ANE_Date
-    ## lapply(list_dat_each_Model_Date_features_Predict, str)
-    for (i_list in seq_len(length(list_dat_each_Model_Date_features_Predict))) {
-      list_dat_each_Model_Date_features_Predict[[ i_list ]] <-
-        list_dat_each_Model_Date_features_Predict[[ i_list ]] |>
-        dplyr::select(
-          -tidyselect::all_of("ANE_Date")
-        )
-    }
+    #firstANE# # remove ANE_Date
+    #firstANE# ## lapply(list_dat_each_Model_Date_features_Predict, str)
+    #firstANE# for (i_list in seq_len(length(list_dat_each_Model_Date_features_Predict))) {
+    #firstANE#   list_dat_each_Model_Date_features_Predict[[ i_list ]] <-
+    #firstANE#     list_dat_each_Model_Date_features_Predict[[ i_list ]] |>
+    #firstANE#     dplyr::select(
+    #firstANE#       -tidyselect::all_of("ANE_Date")
+    #firstANE#     )
+    #firstANE# }
 
     if ( DD_Group == "All" ) {
       dat_all_Model_ID_Predict <-

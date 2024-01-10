@@ -22,6 +22,7 @@ dd_prediction_model(
   sw_select_full = c("select", "full")[1],
   var_subgroup_analysis = "Client_Waiver",
   sw_imbalanced_binary = c(FALSE, TRUE)[1],
+  sw_quick_full_only = c(FALSE, TRUE)[1],
   sw_m_months_select_quick_full = FALSE,
   sw_m_months_values = list(GER = c(1, 2), Syncronys = c(1, 2), Conduent_Omnicad = c(1),
     RORA = c(1), BBS = c(1), CaseNotes = c(1))
@@ -57,6 +58,8 @@ dd_prediction_model(
 \item{var_subgroup_analysis}{passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none}
 
 \item{sw_imbalanced_binary}{passed to \code{e_rfstr_classification()}, T/F to use standard or imbalanced binary classification with \code{rfsrc::imbalanced()}.  Also increases ntree to \code{5 * sw_rfsrc_ntree}.}
+
+\item{sw_quick_full_only}{passed to \code{e_rfstr_classification()}, T/F to only fit full model and return model object}
 
 \item{sw_m_months_select_quick_full}{T/F to only search for best \code{m_months} arguments.}
 

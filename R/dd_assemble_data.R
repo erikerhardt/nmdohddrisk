@@ -64,7 +64,7 @@ dd_dat_client_IMB_ANE_Model <-
     #, dplyr::desc(ANE_Substantiated)
     )
 
-  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
+  #firstANE# if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[1]) {
     dat_client_IMB_ANE_Model <-
       dat_client_IMB_ANE_Model |>
       dplyr::group_by(
@@ -78,23 +78,23 @@ dd_dat_client_IMB_ANE_Model <-
       dplyr::rename(
         ANE_Date = Date
       )
-  } # "Client_System_ID"
-
-  if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
-    dat_client_IMB_ANE_Model <-
-      dat_client_IMB_ANE_Model |>
-      dplyr::group_by(
-        Client_System_ID
-      ) |>
-      dplyr::distinct() |>
-      #dplyr::slice(         # to only use first ANE instance; NOT (1/10/2024) better to use them all
-      #  1
-      #) |>
-      dplyr::ungroup() |>
-      dplyr::rename(
-        ANE_Date = Date
-      )
-  } # "Client_System_ID__ANE_Date"
+  #firstANE# } # "Client_System_ID"
+  #firstANE#
+  #firstANE# if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
+  #firstANE#   dat_client_IMB_ANE_Model <-
+  #firstANE#     dat_client_IMB_ANE_Model |>
+  #firstANE#     dplyr::group_by(
+  #firstANE#       Client_System_ID
+  #firstANE#     ) |>
+  #firstANE#     dplyr::distinct() |>
+  #firstANE#     #dplyr::slice(         # to only use first ANE instance; NOT (1/10/2024) better to use them all
+  #firstANE#     #  1
+  #firstANE#     #) |>
+  #firstANE#     dplyr::ungroup() |>
+  #firstANE#     dplyr::rename(
+  #firstANE#       ANE_Date = Date
+  #firstANE#     )
+  #firstANE# } # "Client_System_ID__ANE_Date"
 
   return(dat_client_IMB_ANE_Model)
 }
@@ -289,7 +289,7 @@ dd_dat_client_GER_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         is.na(ANE_Date) |
@@ -297,20 +297,20 @@ dd_dat_client_GER_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
   }
 
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_GER_Model_Date <-
       dat_client_GER_Model |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         (GER_Event_Date <= date_Current)
@@ -352,7 +352,7 @@ dd_dat_client_RORA_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         is.na(ANE_Date) |
@@ -360,20 +360,20 @@ dd_dat_client_RORA_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
   }
 
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_RORA_Model_Date <-
       dat_client_RORA_Model |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         (C_RORA_RequestDate <= date_Current)
@@ -415,7 +415,7 @@ dd_dat_client_BBS_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         !is.na(BBS_Date)
@@ -424,20 +424,20 @@ dd_dat_client_BBS_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
   }
 
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_BBS_Model_Date <-
       dat_client_BBS_Model |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         !is.na(BBS_Date)
@@ -480,7 +480,7 @@ dd_dat_client_CaseNotes_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         !is.na(CaseNotes_Date)
@@ -489,20 +489,20 @@ dd_dat_client_CaseNotes_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
   }
 
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_CaseNotes_Model_Date <-
       dat_client_CaseNotes_Model |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         !is.na(CaseNotes_Date)
@@ -545,7 +545,7 @@ dd_dat_client_Syncronys_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         is.na(ANE_Date) |
@@ -553,8 +553,8 @@ dd_dat_client_Syncronys_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
 
   }
@@ -562,12 +562,12 @@ dd_dat_client_Syncronys_Model_Date <-
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_Syncronys_Model_Date <-
       dat_client_Syncronys |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         (Syncronys_AdmitDate <= date_Current)
@@ -609,7 +609,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         is.na(ANE_Date) |
@@ -617,20 +617,20 @@ dd_dat_client_Conduent_Omnicad_Model_Date <-
       ) |>
       dplyr::ungroup() |>
       dplyr::select(
-      #  -ANE_Date
-        -ANE_Substantiated
+        -ANE_Date           #firstANE#
+      , -ANE_Substantiated
       )
   }
 
   if (sw_ANE_Current == c("ANE", "Current")[2]) {
     dat_client_Conduent_Omnicad_Model_Date <-
       dat_client_Conduent_Omnicad |>
-      dplyr::mutate(
-        ANE_Date = NA |> lubridate::as_date()
-      ) |>
+      #firstANE# dplyr::mutate(
+      #firstANE#   ANE_Date = NA |> lubridate::as_date()
+      #firstANE# ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::filter(
         (Line_Svc_Date_First <= date_Current)
@@ -675,7 +675,8 @@ dd_dat_client_GER_Model_Date_features_Model <-
       ) |>
       dplyr::left_join(
         dat_client_GER_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -711,7 +712,7 @@ dd_dat_client_GER_Model_Date_features_Model <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID                    = Client_System_ID                    |> first()
@@ -769,7 +770,7 @@ dd_dat_client_GER_Model_Date_features_Model <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       ##, GER_Date
       ##, GER_Provider
@@ -835,7 +836,8 @@ dd_dat_client_RORA_Model_Date_features <-
       ) |>
       dplyr::left_join(
         dat_client_RORA_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -871,7 +873,7 @@ dd_dat_client_RORA_Model_Date_features <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID                    = Client_System_ID                    |> first()
@@ -918,7 +920,7 @@ dd_dat_client_RORA_Model_Date_features <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       ## New with Model_02
       #, C_RORA_RoraType
@@ -971,7 +973,8 @@ dd_dat_client_BBS_Model_Date_features <-
       ) |>
       dplyr::left_join(
         dat_client_BBS_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -1007,7 +1010,7 @@ dd_dat_client_BBS_Model_Date_features <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID                    = Client_System_ID                    |> first()
@@ -1047,7 +1050,7 @@ dd_dat_client_BBS_Model_Date_features <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       , BBS_AtRisk
       , Client_Age
@@ -1091,7 +1094,8 @@ dd_dat_client_CaseNotes_Model_Date_features <-
       ) |>
       dplyr::left_join(
         dat_client_CaseNotes_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -1127,7 +1131,7 @@ dd_dat_client_CaseNotes_Model_Date_features <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID                    = Client_System_ID                    |> first()
@@ -1167,7 +1171,7 @@ dd_dat_client_CaseNotes_Model_Date_features <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       , CaseNotes_AtRisk
       , Client_Age
@@ -1212,7 +1216,8 @@ dd_dat_client_Syncronys_Model_Date_features <-
       ) |>
       dplyr::left_join(
         dat_client_Syncronys_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -1248,7 +1253,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID    = Client_System_ID    |> first()
@@ -1290,7 +1295,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       , Syncronys_Type_E
       , Syncronys_Type_I
@@ -1339,7 +1344,8 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       ) |>
       dplyr::left_join(
         dat_client_Conduent_Omnicad_Model_Date
-      , by = dplyr::join_by(Client_System_ID, ANE_Date)
+      , by = dplyr::join_by(Client_System_ID)
+      #firstANE# , by = dplyr::join_by(Client_System_ID, ANE_Date)
       )
 
     if (sw_ANE_Current == c("ANE", "Current")[1]) {
@@ -1375,7 +1381,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       ) |>
       dplyr::group_by(
         Client_System_ID
-      , ANE_Date
+      #firstANE# , ANE_Date
       ) |>
       dplyr::summarize(
         Client_System_ID    = Client_System_ID    |> first()
@@ -1433,7 +1439,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       , Client_Race
       , Client_Region
       , Client_Waiver
-      , ANE_Date
+      #firstANE# , ANE_Date
       , ANE_Substantiated
       , Conduent_Omnicad_Behavioral_Support_Services
       , Conduent_Omnicad_Respite_Living_Supports
