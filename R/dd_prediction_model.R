@@ -219,6 +219,54 @@ dd_prediction_model <-
 
 
 
+  # # ANE Before and After date_Current (for output file)
+  # dat_client_IMB_ANE_before_after <-
+  #   dat_client_IMB_ANE |>
+  #   dplyr::mutate(
+  #     ANE_Before_First =
+  #       dplyr::case_when(
+  #         (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
+  #       , TRUE ~ NA #"No ANE Before"
+  #       )
+  #   , ANE_After_Last =
+  #       dplyr::case_when(
+  #         (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
+  #       , TRUE ~ NA #"No ANE After"
+  #       )
+  #   ) |>
+  #   dplyr::select(
+  #     Client_System_ID
+  #   , ANE_Before_First
+  #   , ANE_After_Last
+  #   ) |>
+  #   dplyr::distinct() |>
+  #   dplyr::group_by(
+  #     Client_System_ID
+  #   ) |>
+  #   dplyr::mutate(
+  #     ANE_Before_First = ANE_Before_First |> dplyr::first(na_rm = TRUE)
+  #   , ANE_After_Last   = ANE_After_Last   |> dplyr::last (na_rm = TRUE)
+  #   ) |>
+  #   #tidyr::fill(
+  #   #  ANE_Before_First
+  #   #, .direction = "updown"
+  #   #) |>
+  #   #tidyr::fill(
+  #   #  ANE_After_Last
+  #   #, .direction = "downup"
+  #   #) |>
+  #   dplyr::ungroup() |>
+  #   dplyr::distinct() |>
+  #   dplyr::right_join(
+  #     dat_client_Match |>
+  #     dplyr::select(
+  #       Client_System_ID
+  #     )
+  #   , by = dplyr::join_by(Client_System_ID)
+  #   )
+
+
+
 
   if (!sw_m_months_select_quick_full) {
 
@@ -688,6 +736,7 @@ dd_prediction_model <-
   #dat_all_Model_ID_Predict |> str()
   #dat_all_Model_ID_Predict |> summary()
 
+  # Predict ANE
   out_e_rf_Model_DD_Predict <-
     predict(
       object        = out_e_rf_Model_DD_Train$o_class_sel
