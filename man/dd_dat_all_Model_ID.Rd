@@ -10,7 +10,7 @@ dd_dat_all_Model_ID(
     dat_client_Conduent_Omnicad_Model_Date_features, dat_client_RORA_Model_Date_features,
     dat_client_BBS_Model_Date_features, dat_client_CaseNotes),
   by_for_join = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender,
-    Client_Ethnicity, Client_Race, Client_Region, Age)
+    Client_Ethnicity, Client_Race, Client_Region, Client_Age)
 )
 }
 \arguments{
