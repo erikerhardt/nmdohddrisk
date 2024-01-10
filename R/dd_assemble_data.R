@@ -283,7 +283,7 @@ dd_dat_client_GER_Model_Date <-
     dat_client_GER_Model_Date <-
       dat_client_GER_Model |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -346,7 +346,7 @@ dd_dat_client_RORA_Model_Date <-
     dat_client_RORA_Model_Date <-
       dat_client_RORA_Model |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -410,7 +410,7 @@ dd_dat_client_BBS_Model_Date <-
     dat_client_BBS_Model_Date <-
       dat_client_BBS_Model |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -475,7 +475,7 @@ dd_dat_client_CaseNotes_Model_Date <-
     dat_client_CaseNotes_Model_Date <-
       dat_client_CaseNotes_Model |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -540,7 +540,7 @@ dd_dat_client_Syncronys_Model_Date <-
     dat_client_Syncronys_Model_Date <-
       dat_client_Syncronys |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -603,7 +603,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date <-
     dat_client_Conduent_Omnicad_Model_Date <-
       dat_client_Conduent_Omnicad |>
       dplyr::mutate(
-        ANE_Date = NA
+        ANE_Date = NA |> lubridate::as_date()
       ) |>
       dplyr::group_by(
         Client_System_ID
@@ -728,7 +728,7 @@ dd_dat_client_GER_Model_Date_features_Model <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -769,7 +769,7 @@ dd_dat_client_GER_Model_Date_features_Model <-
       , GER_AtRisk_Suicide_Related_Behavior
       , GER_AtRisk_PRN_Psych_Use
       , GER_AtRisk_Sum
-      , Age
+      , Client_Age
       ) |>
       dplyr::relocate(
         ANE_Substantiated
@@ -877,7 +877,7 @@ dd_dat_client_RORA_Model_Date_features <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -907,7 +907,7 @@ dd_dat_client_RORA_Model_Date_features <-
       , C_RORA_Care_or_Compliance_2
       , C_RORA_Risk_1
       , C_RORA_Risk_2
-      , Age
+      , Client_Age
       ) |>
       dplyr::relocate(
         ANE_Substantiated
@@ -1006,7 +1006,7 @@ dd_dat_client_BBS_Model_Date_features <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -1027,7 +1027,7 @@ dd_dat_client_BBS_Model_Date_features <-
       , ANE_Date
       , ANE_Substantiated
       , BBS_AtRisk
-      , Age
+      , Client_Age
       ) |>
       dplyr::relocate(
         ANE_Substantiated
@@ -1126,7 +1126,7 @@ dd_dat_client_CaseNotes_Model_Date_features <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -1147,7 +1147,7 @@ dd_dat_client_CaseNotes_Model_Date_features <-
       , ANE_Date
       , ANE_Substantiated
       , CaseNotes_AtRisk
-      , Age
+      , Client_Age
       ) |>
       dplyr::relocate(
         ANE_Substantiated
@@ -1249,7 +1249,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -1271,7 +1271,7 @@ dd_dat_client_Syncronys_Model_Date_features <-
       , ANE_Substantiated
       , Syncronys_Type_E
       , Syncronys_Type_I
-      , Age
+      , Client_Age
       #, Last_Date
       ) |>
       dplyr::relocate(
@@ -1386,7 +1386,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       dplyr::ungroup() |>
       # clean rest of data
       dplyr::mutate(
-        Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
+        Client_Age = round((Last_Date - Client_DOB) / 365.25, 1) |> as.numeric()
       , ANE_Substantiated =
           dplyr::case_when(
             is.na(ANE_Substantiated)  ~ 0
@@ -1426,7 +1426,7 @@ dd_dat_client_Conduent_Omnicad_Model_Date_features <-
       , Conduent_Omnicad_Line_Billed_Amt_Skew
       , Conduent_Omnicad_Line_Pd_Amt_Skew
       , Conduent_Omnicad_Diff_Amt_Skew
-      , Age
+      , Client_Age
       #, Last_Date
       ) |>
       dplyr::relocate(
@@ -1663,7 +1663,7 @@ dd_dat_all_Model_ID <-
       , dat_client_BBS_Model_Date_features
       , dat_client_CaseNotes
       )
-  , by_for_join = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Age)
+  , by_for_join = dplyr::join_by(ANE_Substantiated, Client_System_ID, Client_Gender, Client_Ethnicity, Client_Race, Client_Region, Client_Age)
   ) {
 
   for (i_list in seq_len(length(list_dat_features))) {
