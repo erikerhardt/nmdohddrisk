@@ -1,8 +1,8 @@
 Package: nmdohddrisk
 Type: Package
 Title: Risk Prediction model for NM DOH DD ANE
-Version: 0.0.14
-Date: 2024-01-10
+Version: 0.0.15
+Date: 2024-01-15
 Authors@R:
     c(person(
       given = "Erik"
@@ -16,7 +16,7 @@ License: MIT + file LICENSE
 URL: https://github.com/erikerhardt/nmdohddrisk
 BugReports: https://github.com/erikerhardt/nmdohddrisk/issues
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 NeedsCompilation: no

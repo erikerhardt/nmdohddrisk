@@ -1,0 +1,392 @@
+---
+title:        "NMDOH DD Prediction model, V14"
+subtitle:     "Additional summaries"
+author:       Erik Erhardt
+date:         last-modified # today, now, last-modified
+date-format:  long          # full, long, medium, short, iso,   https://quarto.org/docs/reference/dates.html
+format:
+  html:
+    theme:                  litera
+    highlight-style:        atom-one
+    page-layout:            full      # article, full   # https://quarto.org/docs/output-formats/page-layout.html
+    toc:                    true
+    toc-depth:              4
+    toc-location:           body      # left, body, right
+    number-sections:        true      # true, false
+    number-depth:           3
+    code-fold:              show      # true (initially hidden), false, show (initially shown)
+    code-tools:                       # menu top-right to show/hide all code
+      toggle:               true
+      caption:              "Code"    # none
+      source:               false
+    code-overflow:          scroll    # scroll, wrap
+    code-block-bg:          true
+    code-block-border-left: "#30B0E0"
+    df-print:               paged     # default, kable, tibble, paged   # https://quarto.org/docs/computations/r.html
+fig-width:                  6
+fig-height:                 4
+execute: # https://quarto.org/docs/computations/execution-options.html, https://quarto.org/docs/computations/r.html
+  cache:    false   # false, true
+  eval:     true    # true, false  Evaluate the code chunk (if false, just echos the code into the output).
+  echo:     true    # true, false  Include the source code in output
+---
+
+<!---
+# Erik's compile commands in R:
+  fn_qmd <- "NMDOH_DD_Step-3_AdditionalSummaries_V14_20240110.qmd"
+  setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts")
+  quarto::quarto_render(input = fn_qmd)
+-->
+
+```{r init}
+#| output:  false
+#| warning: false
+#| error:   false
+
+setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts")
+
+options(
+  dplyr.print_min         = 6
+, dplyr.print_max         = 6
+, pillar.max_footer_lines = 2
+, pillar.min_chars        = 15
+, stringr.view_n          = 6
+, cli.num_colors          = 0       # Temporarily deactivate cli output for quarto
+, cli.hyperlink           = FALSE
+, pillar.bold             = TRUE
+, width                   = 77      # 80 - 3 for #> comment
+, readr.show_col_types    = FALSE   # re0adr::read_csv(), do not show column types
+, str                     = strOptions(list.len = 1e3)
+, knitr.kable.NA          = ''      # Display NAs as blanks
+)
+
+my_seed <- 76543
+set.seed(my_seed)
+
+library(nmdohddrisk)
+library(erikmisc)
+library(tidyverse)
+
+ggplot2::theme_set(ggplot2::theme_bw(base_size = 12))
+
+# Parallel processing
+library(parallel)
+options(rf.cores = parallel::detectCores() - 2) # OpenMP Parallel Processing
+options(mc.cores = parallel::detectCores() - 2) # R-side Parallel Processing
+
+## Load predictions
+date_Current =
+  c(
+    "2023-01-01"
+  , "2023-02-01"
+  , "2023-03-01"
+  , "2023-04-01"
+  , "2023-05-01"
+  , "2023-06-01"
+  , "2023-07-01"
+  , "2023-08-01"
+  , "2023-09-01"
+  , "2023-10-01"
+  , "2023-11-01"
+  , "2023-12-01"
+  )
+path_prefix_out               = paste0("out_V14_BalSel_", date_Current, "_")
+
+i_group = 1
+path_prefix_out               = paste0(path_prefix_out, c("All", "DD", "MV", "MF")[i_group])
+
+path_results <-
+  "../Results/out_2024-01-10"
+
+path_results_out <-
+  file.path(
+    path_results
+  , path_prefix_out
+  )
+
+fn_out_Predict <-
+  file.path(
+    path_results_out
+  , paste0(
+      path_prefix_out
+    , "__dat_all_Model_ID_Predict_out.csv"
+    )
+  )
+
+dat_pred <- list()
+for (i_fn in seq_len(length(fn_out_Predict))) {
+  ## i_fn = 1
+
+  dat_pred[[ i_fn ]] <-
+    readr::read_csv(
+      file = fn_out_Predict[i_fn]
+    ) |>
+    dplyr::select(
+      Client_System_ID
+    , Probability_ANE
+    , Class
+    , date_Current
+    #, ANE_Before_First
+    #, ANE_Before_Last
+    , ANE_After_First
+    #, ANE_After_Last
+    , Client_Waiver
+    )
+}
+dat_pred <-
+  dat_pred |>
+  dplyr::bind_rows()
+
+
+
+## load ANE data
+path_results_dat <-
+  "../Results/dat_2024-01-10"
+load(file.path(path_results_dat, "dat_client_IMB_ANE.RData"))
+
+# round dates down to first of month to align with predictions for that month
+dat_client_IMB_ANE <-
+  dat_client_IMB_ANE |>
+  dplyr::filter(
+    ANE_Substantiated == 1
+  ) |>
+  dplyr::mutate(
+    Date =
+      paste(
+        lubridate::year (Date)
+      , lubridate::month(Date)
+      , "01"
+      , sep = "-"
+      ) |>
+      lubridate::ymd()
+  )
+
+
+# Plot Probability over Date with ANE
+dat_pred_plot <-
+  dat_pred |>
+  dplyr::left_join(
+    dat_client_IMB_ANE
+  , by = dplyr::join_by(Client_System_ID, date_Current == Date)
+  ) |>
+  dplyr::mutate(
+    Class = Class |> factor(levels = c("Yes", "No"))
+  )
+dat_pred_plot |> str()
+
+
+p <- ggplot(dat_pred_plot, aes(x = date_Current, y = Probability_ANE))
+p <- p + theme_bw()
+p <- p + geom_line(aes(group = Client_System_ID, colour = Class), alpha = 0.5)
+#p <- p + geom_point(aes(group = Client_System_ID, colour = Class), alpha = 0.5)
+
+p <- p + geom_jitter(data = dat_pred_plot |> dplyr::filter(!is.na(ANE_Substantiated)), aes(x = date_Current, y = Probability_ANE), color = "black", size = 2, width = 2, alpha = 1/2)
+
+p <- p + labs(
+                title     = "Risk prediction by date"
+              , subtitle  = "ANE indicated with dots"
+              , x         = "Current Date"
+              , y         = "Probability ANE"
+              #, caption = paste0(  "Caption 1"
+              #                  , "\nCaption 2"
+              #                  )
+              , colour    = "Class"
+              #, shape     = "Class"
+              #, linetype  = "General Health"  #"Diagnosis"
+              #, fill      = "Diagnosis"
+              #, tag = "A"
+              )
+#print(p)
+
+
+ggsave(
+    paste0("../Presentations/images/", "plot_date_risk_pred_ANE_V14", ".png")
+  , plot   = p
+  , width  = 16 * 0.75
+  , height = 9  * 0.75
+  ## png, jpeg
+  , dpi    = 300
+  , bg     = "white"
+  ## pdf
+  #, units  = "in"
+  #, useDingbats = FALSE
+  )
+
+
+# Plot Probability over Date with ANE, only clients with ANE
+dat_pred_plot_ANE_GE1 <-
+  dat_pred_plot |>
+  dplyr::group_by(
+    Client_System_ID
+  ) |>
+  dplyr::summarize(
+    ANE_GE1 = sum(!is.na(ANE_Substantiated))
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::filter(
+    ANE_GE1 > 0
+  )
+
+dat_pred_plot_ANE <-
+  dat_pred_plot |>
+  dplyr::semi_join(
+    dat_pred_plot_ANE_GE1
+  , by = dplyr::join_by(Client_System_ID)
+  )
+
+p <- ggplot(dat_pred_plot_ANE, aes(x = date_Current, y = Probability_ANE))
+p <- p + theme_bw()
+p <- p + geom_line(aes(group = Client_System_ID, colour = Class), alpha = 0.5)
+#p <- p + geom_jitter(color = "black", size = 2, width = 2, alpha = 1/2)
+p <- p + geom_jitter(data = dat_pred_plot |> dplyr::filter(!is.na(ANE_Substantiated)), aes(x = date_Current, y = Probability_ANE), color = "black", size = 2, width = 0, alpha = 1/2)
+
+p <- p + labs(
+                title     = "Risk prediction by date (Clients with at least one ANE)"
+              , subtitle  = "ANE indicated with dots"
+              , x         = "Current Date"
+              , y         = "Probability ANE"
+              #, caption = paste0(  "Caption 1"
+              #                  , "\nCaption 2"
+              #                  )
+              , colour    = "Class"
+              #, shape     = "Class"
+              #, linetype  = "General Health"  #"Diagnosis"
+              #, fill      = "Diagnosis"
+              #, tag = "A"
+              )
+#print(p)
+
+
+ggsave(
+    paste0("../Presentations/images/", "plot_date_risk_pred_ANE_V14_2", ".png")
+  , plot   = p
+  , width  = 16 * 0.75
+  , height = 9  * 0.75
+  ## png, jpeg
+  , dpi    = 300
+  , bg     = "white"
+  ## pdf
+  #, units  = "in"
+  #, useDingbats = FALSE
+  )
+
+
+# Table of ANE vs Predictions
+dat_pred_table <-
+  dat_pred |>
+  dplyr::mutate(
+    ANE_After = as.numeric(!is.na(ANE_After_First))
+    #ANE_After = as.numeric(!is.na(ANE_Substantiated))
+  ) |>
+  e_table_sum_freq_prop(
+  #  dat           = dat_pred_table
+    var_names     = c("date_Current", "ANE_After", "Class")
+  , sw_sort_prop  = FALSE
+  , sw_drop_NA    = FALSE
+  , sw_totals     = FALSE
+  ) |>
+  dplyr::mutate(
+    n_prop = paste0(n, " (", sprintf("%05.3f", prop), ")")
+  ) |>
+  dplyr::filter(
+    ANE_After == 1
+  )
+
+
+dat_pred_table_summary <-
+  dat_pred_table |>
+  tidyr::pivot_wider(
+    id_cols     = "date_Current"
+  , names_from  = c("ANE_After", "Class")
+  , values_from = "n_prop"
+  )
+
+dat_pred_table_summary |>
+  print(n=Inf)
+
+tab_pred_table_summary <-
+  dat_pred_table_summary |>
+  gt::gt() |>
+  gt::as_latex()
+
+tab_pred_table_summary[1]
+
+
+
+# Plot Probability over Date with ANE (up to first ANE), only clients with ANE
+dat_pred_plot_ANE_UpToFirst <-
+  dat_pred_plot |>
+  dplyr::group_by(
+    Client_System_ID
+  ) |>
+  dplyr::mutate(
+    ANE_UpToFirst = cumsum(!is.na(ANE_Substantiated))
+  ) |>
+  dplyr::ungroup()
+
+dat_pred_plot_ANE <-
+  dat_pred_plot_ANE_UpToFirst |>
+  dplyr::semi_join(
+    dat_pred_plot_ANE_GE1
+  , by = dplyr::join_by(Client_System_ID)
+  ) |>
+  dplyr::filter(
+    (ANE_UpToFirst == 0) |
+    ((ANE_UpToFirst == 1) & !is.na(ANE_Substantiated))
+  )
+
+p <- ggplot(dat_pred_plot_ANE, aes(x = date_Current, y = Probability_ANE))
+p <- p + theme_bw()
+p <- p + geom_line(aes(group = Client_System_ID, colour = Class), alpha = 0.5)
+#p <- p + geom_jitter(color = "black", size = 2, width = 2, alpha = 1/2)
+p <- p + geom_jitter(data = dat_pred_plot |> dplyr::filter(!is.na(ANE_Substantiated)), aes(x = date_Current, y = Probability_ANE), color = "black", size = 2, width = 0, alpha = 1/2)
+
+p <- p + labs(
+                title     = "Risk prediction by date (Clients with at least one ANE, up to first ANE)"
+              , subtitle  = "ANE indicated with dots"
+              , x         = "Current Date"
+              , y         = "Probability ANE"
+              #, caption = paste0(  "Caption 1"
+              #                  , "\nCaption 2"
+              #                  )
+              , colour    = "Class"
+              #, shape     = "Class"
+              #, linetype  = "General Health"  #"Diagnosis"
+              #, fill      = "Diagnosis"
+              #, tag = "A"
+              )
+#print(p)
+
+
+ggsave(
+    paste0("../Presentations/images/", "plot_date_risk_pred_ANE_V14_3", ".png")
+  , plot   = p
+  , width  = 16 * 0.75
+  , height = 9  * 0.75
+  ## png, jpeg
+  , dpi    = 300
+  , bg     = "white"
+  ## pdf
+  #, units  = "in"
+  #, useDingbats = FALSE
+  )
+
+```
+
+
+Example decision tree
+
+```{r}
+# step inside dd_prediction_model(), then e_rfsrc_classification(), fit full model
+# plot tree http://www.milbo.org/rpart-plot/prp.pdf
+
+# needed to export from Viewer (since it doesn't display as a plot)
+
+#png(
+#    filename  = paste0("../Presentations/images/", "plot_decision_tree_one", ".png")
+#  , width     = 1600
+#  , height    = 900
+#  )
+plot(randomForestSRC::get.tree(o_class_full, 1))
+#dev.off()
+```

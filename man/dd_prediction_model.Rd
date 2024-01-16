@@ -5,17 +5,14 @@
 \title{NM DOH DD Prediction Model, main predict and model function}
 \usage{
 dd_prediction_model(
-  working_directory =
-    "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts",
-  path_prefix_out = "out_V10",
-  DD_Group = c("All", "DD", "MV", "MF")[1],
-  date_Current = "2023-12-01",
-  m_months_GER = "6 months",
-  m_months_Syncronys = "2 months",
-  m_months_Conduent_Omnicad = "2 months",
-  m_months_RORA = "2 months",
-  m_months_BBS = "12 months",
-  m_months_CaseNotes = "2 months",
+  params = params,
+  path_list = path_list,
+  m_months_GER = "4 months",
+  m_months_Syncronys = "3 months",
+  m_months_Conduent_Omnicad = "4 months",
+  m_months_RORA = "4 months",
+  m_months_BBS = "2 months",
+  m_months_CaseNotes = "4 months",
   sw_rfsrc_ntree = 500,
   sw_alpha = 0.2,
   sw_unit_of_analysis = c("Client_System_ID", "Client_System_ID__ANE_Date")[1],
@@ -29,14 +26,6 @@ dd_prediction_model(
 )
 }
 \arguments{
-\item{working_directory}{Working directory}
-
-\item{path_prefix_out}{Path and file prefix for output folders}
-
-\item{DD_Group}{All or specific Waiver group}
-
-\item{date_Current}{Date for last day of data to use for analysis}
-
 \item{m_months_GER}{GER       data, date range to keep, from first ANE or last observation back number of months}
 
 \item{m_months_Syncronys}{Syncronys data, date range to keep, from first ANE or last observation back number of months}
@@ -64,6 +53,14 @@ dd_prediction_model(
 \item{sw_m_months_select_quick_full}{T/F to only search for best \code{m_months} arguments.}
 
 \item{sw_m_months_values}{if \code{sw_m_months_select_quick_full == TRUE}, list of number of months for each data source to perform model selection on m_months arguments.  One strategy for search is to start with \code{c(1, 2)} and if the result is 1, then keep 1, otherwise try \code{c(2, 3)}, and so on for 4, 6, 9, and 12 months.  Increment only 4 values at a time for 16 processors.}
+
+\item{working_directory}{Working directory}
+
+\item{path_prefix_out}{Path and file prefix for output folders}
+
+\item{DD_Group}{All or specific Waiver group}
+
+\item{date_Current}{Date for last day of data to use for analysis}
 }
 \value{
 dat_client_RORA

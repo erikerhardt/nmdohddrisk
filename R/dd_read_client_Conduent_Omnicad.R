@@ -77,7 +77,7 @@ dd_read_client_Conduent_Omnicad <-
   # #dat_sheet_prior_auth <- list()
   #
   # #library(doParallel)  # for %dopar% operator
-  # num_cores <- parallel::detectCores() - 2
+  # num_cores <- parallel::detectCores() - 1
   # doParallel::registerDoParallel(num_cores)
   #
   # tictoc::tic(msg = "Timer") # start timer
@@ -236,7 +236,7 @@ dd_read_client_Conduent_Omnicad <-
   #dat_sheet_weekly_claims <- list()
 
   #library(doParallel)  # for %dopar% operator
-  num_cores <- parallel::detectCores() - 2
+  num_cores <- parallel::detectCores() - 1
   doParallel::registerDoParallel(num_cores)
 
   tictoc::tic(msg = "Timer") # start timer
@@ -385,7 +385,7 @@ dd_read_client_Conduent_Omnicad <-
 
   #dat_client_Conduent_Omnicad |> str()
 
-  name_dat |> dd_save_to_RData()
+  #name_dat |> dd_save_to_RData()
   # if (!is.null(path_results_dat)) {
   #   save(
   #     list = ls(pattern = name_dat)

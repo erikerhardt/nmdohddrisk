@@ -1,0 +1,283 @@
+---
+title:        "NMDOH DD Prediction model, V13"
+subtitle:     "Data: ANE on Demographics, Waiver, GER, Syncronys, Omnicad, RORA, BBS, CaseNotes"
+author:       Erik Erhardt
+date:         last-modified # today, now, last-modified
+date-format:  long          # full, long, medium, short, iso,   https://quarto.org/docs/reference/dates.html
+format:
+  html:
+    theme:                  litera
+    highlight-style:        atom-one
+    page-layout:            full      # article, full   # https://quarto.org/docs/output-formats/page-layout.html
+    toc:                    true
+    toc-depth:              4
+    toc-location:           body      # left, body, right
+    number-sections:        true      # true, false
+    number-depth:           3
+    code-fold:              show      # true (initially hidden), false, show (initially shown)
+    code-tools:                       # menu top-right to show/hide all code
+      toggle:               true
+      caption:              "Code"    # none
+      source:               false
+    code-overflow:          scroll    # scroll, wrap
+    code-block-bg:          true
+    code-block-border-left: "#30B0E0"
+    df-print:               paged     # default, kable, tibble, paged   # https://quarto.org/docs/computations/r.html
+fig-width:                  6
+fig-height:                 4
+execute: # https://quarto.org/docs/computations/execution-options.html, https://quarto.org/docs/computations/r.html
+  cache:    false   # false, true
+  eval:     true    # true, false  Evaluate the code chunk (if false, just echos the code into the output).
+  echo:     true    # true, false  Include the source code in output
+---
+
+<!---
+# Erik's compile commands in R:
+  fn_qmd <- "NMDOH_DD_Step-2_PredictionModeling_V14_20240110.qmd"
+  setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts")
+  quarto::quarto_render(input = fn_qmd)
+-->
+
+```{r init}
+#| output:  false
+#| warning: false
+#| error:   false
+
+setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts")
+
+options(
+  dplyr.print_min         = 6
+, dplyr.print_max         = 6
+, pillar.max_footer_lines = 2
+, pillar.min_chars        = 15
+, stringr.view_n          = 6
+, cli.num_colors          = 0       # Temporarily deactivate cli output for quarto
+, cli.hyperlink           = FALSE
+, pillar.bold             = TRUE
+, width                   = 77      # 80 - 3 for #> comment
+, readr.show_col_types    = FALSE   # readr::read_csv(), do not show column types
+, str                     = strOptions(list.len = 1e3)
+, knitr.kable.NA          = ''      # Display NAs as blanks
+)
+
+my_seed <- 76543
+set.seed(my_seed)
+
+library(nmdohddrisk)
+library(erikmisc)
+library(tidyverse)
+
+ggplot2::theme_set(ggplot2::theme_bw(base_size = 12))
+
+# Parallel processing
+library(parallel)
+options(rf.cores = parallel::detectCores() - 2) # OpenMP Parallel Processing
+options(mc.cores = parallel::detectCores() - 2) # R-side Parallel Processing
+
+
+working_directory             = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
+date_Current                  = "2023-12-01"
+path_prefix_out               = paste0("out_V14xxx_BalSel_", date_Current, "_")
+# Date range to keep previous to first ANE or last observation
+m_months_GER                  = "4 months"  # optim balanced      "6 months"
+m_months_Syncronys            = "3 months"  # optim balanced      "2 months"
+m_months_Conduent_Omnicad     = "4 months"  # optim balanced      "2 months"
+m_months_RORA                 = "4 months"  # optim balanced      "2 months"
+m_months_BBS                  = "2 months"  # optim balanced      "12 months"
+m_months_CaseNotes            = "4 months"  # optim balanced      "3 months"
+sw_rfsrc_ntree                = 500
+sw_alpha                      = 0.10
+sw_unit_of_analysis           = c("Client_System_ID", "Client_System_ID__ANE_Date")[1]
+sw_select_full                = c("select", "full")[1]
+var_subgroup_analysis         = "Client_Waiver"
+sw_imbalanced_binary          = c(FALSE, TRUE)[1]
+sw_m_months_select_quick_full = FALSE
+sw_quick_full_only            = c(FALSE, TRUE)[1]  # quick full
+sw_m_months_values            = NULL
+do_groups <- 1 # 1:3  # c("All", "DD", "MV", "MF")
+
+#do_date_Current =
+#  c(
+#    "2023-01-01"
+#  , "2023-02-01"
+#  , "2023-03-01"
+#  , "2023-04-01"
+#  , "2023-05-01"
+#  , "2023-06-01"
+#  , "2023-07-01"
+#  , "2023-08-01"
+#  , "2023-09-01"
+#  , "2023-10-01"
+#  , "2023-11-01"
+#  , "2023-12-01"
+#  )
+
+
+# library(doParallel)  # for %dopar% operator
+# #num_cores <- min(length(do_groups), parallel::detectCores() - 2)
+# num_cores <- min(length(do_date_Current), parallel::detectCores() - 2)
+# doParallel::registerDoParallel(num_cores)
+#
+# tictoc::tic(msg = "Timer") # start timer
+#
+# # don't prespecify the "results" list
+# results <-
+#   foreach::foreach(
+#     i_group = seq_along(do_groups)
+#     #i_date_Current = seq_along(do_date_Current)
+#   #, .combine =                             # default is a list
+#   , .inorder = FALSE                        # FALSE is faster
+#   , .packages = c("nmdohddrisk", "erikmisc", "dplyr", "stringr", "lubridate")  # character vector of packages that the tasks depend on
+#   , .export = NULL                          # character vector of variables to export
+#   #) %do% # sequential
+#   ) %dopar%  # parallel
+#   {
+
+  #date_Current <- do_date_Current[i_date_Current]
+  #path_prefix_out               = paste0("out_V14_BalSel_", date_Current, "_")
+
+
+  #for (i_group in 1:3) {
+  i_group = 3
+  dd_prediction_model(
+      working_directory             = working_directory
+    , path_prefix_out               = paste0(path_prefix_out, c("All", "DD", "MV", "MF")[i_group])
+    , DD_Group                      = c("All", "DD", "MV", "MF")[i_group]
+    , date_Current                  = date_Current
+    , m_months_GER                  = m_months_GER
+    , m_months_Syncronys            = m_months_Syncronys
+    , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
+    , m_months_RORA                 = m_months_RORA
+    , m_months_BBS                  = m_months_BBS
+    , m_months_CaseNotes            = m_months_CaseNotes
+    , sw_rfsrc_ntree                = sw_rfsrc_ntree
+    , sw_alpha                      = sw_alpha
+    , sw_unit_of_analysis           = sw_unit_of_analysis
+    , sw_select_full                = sw_select_full
+    , var_subgroup_analysis         = var_subgroup_analysis
+    , sw_imbalanced_binary          = sw_imbalanced_binary
+    , sw_quick_full_only            = sw_quick_full_only
+    , sw_m_months_select_quick_full = sw_m_months_select_quick_full
+    , sw_m_months_values            = sw_m_months_values
+    )
+  #} # for i_group
+#} # foreach
+
+# tictoc::toc() # end timer
+#
+# # explicitly close the implicitly created cluster
+# doParallel::stopImplicitCluster()
+```
+
+
+```{r}
+# For model selection for m_months
+if (sw_m_months_select_quick_full) {
+  path_prefix_out           = paste0("out_V12_mSel_", date_Current, "_")
+  sw_rfsrc_ntree            = 500
+  sw_m_months_select_quick_full = TRUE
+  sw_m_months_values            = list(  # or just FALSE
+                                    GER              = c(4) # done
+                                  , Syncronys        = c(3) # done
+                                  , Conduent_Omnicad = c(4) # done
+                                  , RORA             = c(4) # done
+                                  , BBS              = c(2) # done
+                                  , CaseNotes        = c(3) # done
+                                  )
+  do_groups <- 1  # c("All", "DD", "MV", "MF")
+
+  ## Model selection for m_months
+  dd_prediction_model(
+      working_directory             = working_directory
+    , path_prefix_out               = paste0(path_prefix_out, c("All", "DD", "MV", "MF")[do_groups[1]])
+    , DD_Group                      = c("All", "DD", "MV", "MF")[do_groups[1]]
+    , date_Current                  = date_Current
+    , m_months_GER                  = m_months_GER
+    , m_months_Syncronys            = m_months_Syncronys
+    , m_months_Conduent_Omnicad     = m_months_Conduent_Omnicad
+    , m_months_RORA                 = m_months_RORA
+    , m_months_BBS                  = m_months_BBS
+    , m_months_CaseNotes            = m_months_CaseNotes
+    , sw_rfsrc_ntree                = sw_rfsrc_ntree
+    , sw_alpha                      = sw_alpha
+    , sw_select_full                = sw_select_full
+    , var_subgroup_analysis         = NULL
+    , sw_imbalanced_binary          = sw_imbalanced_binary
+    , sw_quick_full_only            = sw_quick_full_only
+    , sw_m_months_select_quick_full = sw_m_months_select_quick_full
+    , sw_m_months_values            = sw_m_months_values
+    )
+}
+```
+
+
+# Model V14: ANE on Match, Waiver, GER, RORA, Syncronys, Omnicad, BBS, CaseNotes
+
+1. **Predictive Model**
+    * RESULTS `out_e_rf_Model_01$plot_o_class_sel_ROC$roc_curve_best$Yes |> t()`
+        * Performance very good:
+            * Group                "Yes"
+            * AUC
+            * Sensitivity
+            * Specificity
+            * Balanced Accuracy
+    * Predict ANE Substantiated, first only
+        * If Substantiated, then use data up to Date of their first ANE Substantiated
+        * If not Substantiated or no ANE report, then use up to current Date
+    * Features
+        * Match:
+            * Gender
+            * DOB (calculate Age)
+            * Ethnicity
+            * Race
+            * Region
+        * WaiverType:
+            * Waiver
+        * GER: (DD Waiver, Therap only)
+            * GER_Provider
+            * GER_Region
+            * GER_Waiver
+            * GER_Individual_Birth_Date           : to calculate age vs GER_Event_Date
+            * GER_Event_Date                      : to calculate age
+            * GER_Event_Type
+            * GER_Abuse_Suspected
+            * GER_Neglect_Suspected
+            * GER_Exploitation_Suspected
+            * Ger_AtRisk_* features sum over last m months,
+                * GER_AtRisk_Injury
+                * GER_AtRisk_Med_Error
+                * GER_AtRisk_Emergency_Service
+                * GER_AtRisk_Assault
+                * GER_AtRisk_Law_Enforcement
+                * GER_AtRisk_Elopement
+                * GER_AtRisk_Fall
+                * GER_AtRisk_Restraint
+                * GER_AtRisk_Hospitalization
+                * GER_AtRisk_Suicide_Related_Behavior
+                * GER_AtRisk_PRN_Psych_Use
+                * GER_AtRisk_Sum
+        * Syncronys:
+            * Number of I and E within m months of date
+        * Omnicad:
+            * Number of BSS, RLS, N, and ALL over date range
+            * 12/14/2023 Add these next
+            *  Conduent_Omnicad_Line_Billed_Amt
+            *  Line_Allowed_Chrg_Amt
+            *  Conduent_Omnicad_Line_Pd_Amt
+            * calculate:
+            *   dollars per day
+            *   difference between Billed and Pd
+            *   over 6 months and 1 year:
+            *     median, IQR, variability of top 50%, range of top 50%, skewness
+        * RORA:
+            * C_RORA_Primary_Concern
+            * C_RORA_Secondary_Concern
+            * C_RORA_Care_or_Compliance
+            * C_RORA_Risk
+        * BBS:
+            * BBS_AtRisk (number in date range)
+        * CaseNotes:
+            * DD Waiver: Total of weighted answers to specific questions
+            * MV Waiver: (Waiting on)
+    * Date range: Tuned number of months for each data source for optimal performance on 2023-12-01 over (1, 2, 3, 4, 5, 6 months)
+

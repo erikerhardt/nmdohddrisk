@@ -50,16 +50,14 @@
 #' }
 dd_prediction_model <-
   function(
-    working_directory             = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
-  , path_prefix_out               = "out_V10"
-  , DD_Group                      = c("All", "DD", "MV", "MF")[1]
-  , date_Current                  = "2023-12-01"
-  , m_months_GER                  = "6 months"  # Date range to keep previous to first ANE or last observation
-  , m_months_Syncronys            = "2 months"
-  , m_months_Conduent_Omnicad     = "2 months"
-  , m_months_RORA                 = "2 months"
-  , m_months_BBS                  = "12 months"
-  , m_months_CaseNotes            = "2 months"
+    params                        = params
+  , path_list                     = path_list
+  , m_months_GER                  = "4 months"  #"6 months"  # Date range to keep previous to first ANE or last observation
+  , m_months_Syncronys            = "3 months"  #"2 months"
+  , m_months_Conduent_Omnicad     = "4 months"  #"2 months"
+  , m_months_RORA                 = "4 months"  #"2 months"
+  , m_months_BBS                  = "2 months"  #"12 months"
+  , m_months_CaseNotes            = "4 months"  #"2 months"
   , sw_rfsrc_ntree                = 500
   , sw_alpha                      = 0.20
   , sw_unit_of_analysis           = c("Client_System_ID", "Client_System_ID__ANE_Date")[1]
@@ -77,37 +75,48 @@ dd_prediction_model <-
                                     , CaseNotes        = c(1)
                                     )
   ) {
+  ## working_directory             = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
+  ## path_prefix_out               = "out_V14"
+  ## DD_Group                      = c("All", "DD", "MV", "MF")[1]
+  ## date_Current                  = "2023-12-01"
+
+  # working_directory             <- params$working_directory
+  # path_prefix_out               <- path_list$path_prefix_out
+  # DD_Group                      <- params$DD_Group
+  # date_today                    <- params$date_today
+
+  date_Current                  <- params$date_Current |> lubridate::as_date()
 
   name_analysis <-
     paste0(
       "NM DOH DD Prediction Model: "
-    , path_prefix_out
+    , path_list$path_prefix_out
     , ", "
     , "Group "
-    , DD_Group
+    , params$DD_Group
     , ", "
     , "last date "
-    , date_Current
+    , params$date_Current
     , ", "
-    , "("
-    , "GER "
-    , m_months_GER               |> stringr::str_replace(pattern = " months", "mo")
-    , ", "
-    , "Syncronys "
-    , m_months_Syncronys         |> stringr::str_replace(pattern = " months", "mo")
-    , ", "
-    , "Conduent_Omnicad "
-    , m_months_Conduent_Omnicad  |> stringr::str_replace(pattern = " months", "mo")
-    , ", "
-    , "RORA "
-    , m_months_RORA              |> stringr::str_replace(pattern = " months", "mo")
-    , ", "
-    , "BBS "
-    , m_months_BBS               |> stringr::str_replace(pattern = " months", "mo")
-    , ", "
-    , "CaseNotes "
-    , m_months_CaseNotes         |> stringr::str_replace(pattern = " months", "mo")
-    , ")"
+    #, "("
+    #, "GER "
+    #, m_months_GER               |> stringr::str_replace(pattern = " months", "mo")
+    #, ", "
+    #, "Syncronys "
+    #, m_months_Syncronys         |> stringr::str_replace(pattern = " months", "mo")
+    #, ", "
+    #, "Conduent_Omnicad "
+    #, m_months_Conduent_Omnicad  |> stringr::str_replace(pattern = " months", "mo")
+    #, ", "
+    #, "RORA "
+    #, m_months_RORA              |> stringr::str_replace(pattern = " months", "mo")
+    #, ", "
+    #, "BBS "
+    #, m_months_BBS               |> stringr::str_replace(pattern = " months", "mo")
+    #, ", "
+    #, "CaseNotes "
+    #, m_months_CaseNotes         |> stringr::str_replace(pattern = " months", "mo")
+    #, ")"
     )
 
 
@@ -121,46 +130,17 @@ dd_prediction_model <-
 
   # Parallel processing
   #library(parallel)
-  options(rf.cores = parallel::detectCores() - 2) # OpenMP Parallel Processing
-  options(mc.cores = parallel::detectCores() - 2) # R-side Parallel Processing
+  #options(rf.cores = parallel::detectCores() - 1) # OpenMP Parallel Processing
+  #options(mc.cores = parallel::detectCores() - 1) # R-side Parallel Processing
 
-  dir_old <- setwd(working_directory)
+  dir_old <- setwd(params$working_directory)
 
-  # file paths
-  date_today <-
-    lubridate::today()
-
-  path_results <-
-    "../Results"
-
-  path_results_dat <-
-    file.path(
-      path_results
-    , paste0(
-        "dat_"
-      , date_today
-      )
-    )
-  path_results_out <-
-    file.path(
-      path_results
-    , paste0(
-        "out_"
-      , date_today
-      )
-    )
-
-  fn_list <- list.files(path_results_dat, pattern = "\\.RData")
+  fn_list <- list.files(path_list$path_results_dat, pattern = "\\.RData")
 
   # load all data
   for (n_fn in fn_list) {
-    load(file.path(path_results_dat, n_fn))
+    load(file.path(path_list$path_results_dat, n_fn))
   }
-
-  date_Current <-
-    date_Current |>
-    lubridate::as_date()
-
 
   # ANE Before and After date_Current (for output file)
   dat_client_IMB_ANE_before_after <-
@@ -168,12 +148,12 @@ dd_prediction_model <-
     dplyr::mutate(
       ANE_Before =
         dplyr::case_when(
-          (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
+          (Date <= params$date_Current) & (ANE_Substantiated == 1) ~ Date
         , TRUE ~ NA #"No ANE Before"
         )
     , ANE_After =
         dplyr::case_when(
-          (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
+          (Date >  params$date_Current) & (ANE_Substantiated == 1) ~ Date
         , TRUE ~ NA #"No ANE After"
         )
     ) |>
@@ -227,12 +207,12 @@ dd_prediction_model <-
   #   dplyr::mutate(
   #     ANE_Before_First =
   #       dplyr::case_when(
-  #         (Date <= date_Current) & (ANE_Substantiated == 1) ~ Date
+  #         (Date <= params$date_Current) & (ANE_Substantiated == 1) ~ Date
   #       , TRUE ~ NA #"No ANE Before"
   #       )
   #   , ANE_After_Last =
   #       dplyr::case_when(
-  #         (Date >  date_Current) & (ANE_Substantiated == 1) ~ Date
+  #         (Date >  params$date_Current) & (ANE_Substantiated == 1) ~ Date
   #       , TRUE ~ NA #"No ANE After"
   #       )
   #   ) |>
@@ -299,13 +279,13 @@ dd_prediction_model <-
       )
 
     # Waiver subset
-    if ( !(DD_Group == "All") ) {
+    if ( !(params$DD_Group == "All") ) {
       for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
         ## i_list = 3
         list_dat_each_Model_Date_features_Train[[ i_list ]] <-
           list_dat_each_Model_Date_features_Train[[ i_list ]] |>
           dplyr::filter(
-            Client_Waiver == DD_Group
+            Client_Waiver == params$DD_Group
           ) |>
           dplyr::select(
             -Client_Waiver
@@ -326,7 +306,7 @@ dd_prediction_model <-
       #firstANE#     )
       #firstANE# }
 
-      if ( DD_Group == "All" ) {
+      if ( params$DD_Group == "All" ) {
         dat_all_Model_ID_Train <-
           dd_dat_all_Model_ID(
             list_dat_features = list_dat_each_Model_Date_features_Train
@@ -343,7 +323,7 @@ dd_prediction_model <-
     } # "Client_System_ID"
     if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
 
-      if ( DD_Group == "All" ) {
+      if ( params$DD_Group == "All" ) {
         dat_all_Model_ID_Train <-
           dd_dat_all_Model_ID(
             list_dat_features = list_dat_each_Model_Date_features_Train
@@ -395,10 +375,10 @@ dd_prediction_model <-
 
     ggsave(
           file.path(
-            path_results_out
-          , path_prefix_out
+            path_list$path_results_out
+          , path_list$path_prefix_out
           , paste0(
-              path_prefix_out
+              path_list$path_prefix_out
             , "__"
             , "plot_projection_train"
             , ".png"
@@ -434,8 +414,8 @@ dd_prediction_model <-
       , sw_select_full          = sw_select_full
       , sw_save_model           = c(TRUE, FALSE)[2]
       , plot_title              = name_analysis
-      , out_path                = file.path(path_results_out, path_prefix_out)
-      , file_prefix             = path_prefix_out
+      , out_path                = file.path(path_list$path_results_out, path_list$path_prefix_out)
+      , file_prefix             = path_list$path_prefix_out
       , var_subgroup_analysis   = var_subgroup_analysis
       , plot_format             = c("png", "pdf")[1]
       , n_marginal_plot_across  = 6
@@ -461,7 +441,7 @@ dd_prediction_model <-
     print(tab_m_months_iter)
 
     #library(doParallel)  # for %dopar% operator
-    num_cores <- parallel::detectCores() - 2
+    num_cores <- parallel::detectCores() - 1
     doParallel::registerDoParallel(num_cores)
 
     tictoc::tic(msg = "Timer") # start timer
@@ -494,7 +474,7 @@ dd_prediction_model <-
         , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
         , dat_client_BBS                = dat_client_BBS
         , dat_client_CaseNotes          = dat_client_CaseNotes
-        , date_Current                  = date_Current
+        , date_Current                  = params$date_Current
         , m_months_GER                  = row_iter$GER
         , m_months_Syncronys            = row_iter$Syncronys
         , m_months_Conduent_Omnicad     = row_iter$Conduent_Omnicad
@@ -504,13 +484,13 @@ dd_prediction_model <-
         )
 
       # Waiver subset
-      if ( !(DD_Group == "All") ) {
+      if ( !(params$DD_Group == "All") ) {
         for (i_list in seq_len(length(list_dat_each_Model_Date_features_Train))) {
           ## i_list = 3
           list_dat_each_Model_Date_features_Train[[ i_list ]] <-
             list_dat_each_Model_Date_features_Train[[ i_list ]] |>
             dplyr::filter(
-              Client_Waiver == DD_Group
+              Client_Waiver == params$DD_Group
             ) |>
             dplyr::select(
               -Client_Waiver
@@ -518,7 +498,7 @@ dd_prediction_model <-
         }
       }
 
-      if ( DD_Group == "All" ) {
+      if ( params$DD_Group == "All" ) {
         dat_all_Model_ID_Train <-
           dd_dat_all_Model_ID(
             list_dat_features = list_dat_each_Model_Date_features_Train
@@ -544,8 +524,8 @@ dd_prediction_model <-
         , sw_select_full          = sw_select_full
         , sw_save_model           = c(TRUE, FALSE)[2]
         , plot_title              = name_analysis
-        , out_path                = file.path(path_results_out, path_prefix_out)
-        , file_prefix             = path_prefix_out
+        , out_path                = file.path(path_list$path_results_out, path_list$path_prefix_out)
+        , file_prefix             = path_list$path_prefix_out
         , var_subgroup_analysis   = var_subgroup_analysis
         , plot_format             = c("png", "pdf")[1]
         , n_marginal_plot_across  = 6
@@ -598,16 +578,16 @@ dd_prediction_model <-
         x = out_results
       , file =
           file.path(
-            path_results_out
-          , path_prefix_out
+            path_list$path_results_out
+          , path_list$path_prefix_out
           , paste0(
               paste0(
-                path_prefix_out
+                path_list$path_prefix_out
               , "__"
               , "m_months_selection__"
-              , DD_Group
+              , params$DD_Group
               , "_"
-              , date_Current
+              , params$date_Current
               , "_"
               , Sys.time()
               ) |>
@@ -648,13 +628,13 @@ dd_prediction_model <-
     )
 
   # Waiver subset
-  if ( !(DD_Group == "All") ) {
+  if ( !(params$DD_Group == "All") ) {
     for (i_list in seq_len(length(list_dat_each_Model_Date_features_Predict))) {
       ## i_list = 3
       list_dat_each_Model_Date_features_Predict[[ i_list ]] <-
         list_dat_each_Model_Date_features_Predict[[ i_list ]] |>
         dplyr::filter(
-          Client_Waiver == DD_Group
+          Client_Waiver == params$DD_Group
         ) |>
         dplyr::select(
           -Client_Waiver
@@ -662,7 +642,7 @@ dd_prediction_model <-
     }
   }
 
-  # if ( DD_Group == "All" ) {
+  # if ( params$DD_Group == "All" ) {
   #   dat_all_Model_ID_Predict <-
   #     dd_dat_all_Model_ID(
   #       list_dat_features = list_dat_each_Model_Date_features_Predict
@@ -688,7 +668,7 @@ dd_prediction_model <-
     #firstANE#     )
     #firstANE# }
 
-    if ( DD_Group == "All" ) {
+    if ( params$DD_Group == "All" ) {
       dat_all_Model_ID_Predict <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Predict
@@ -705,7 +685,7 @@ dd_prediction_model <-
   } # "Client_System_ID"
   if (sw_unit_of_analysis == c("Client_System_ID", "Client_System_ID__ANE_Date")[2]) {
 
-    if ( DD_Group == "All" ) {
+    if ( params$DD_Group == "All" ) {
       dat_all_Model_ID_Predict <-
         dd_dat_all_Model_ID(
           list_dat_features = list_dat_each_Model_Date_features_Predict
@@ -824,7 +804,7 @@ dd_prediction_model <-
     , by = dplyr::join_by(Client_System_ID)
     ) |>
     dplyr::mutate(
-      date_Current = date_Current
+      date_Current = params$date_Current
     , date_of_run  = lubridate::today()
     )
 
@@ -861,10 +841,10 @@ dd_prediction_model <-
       dat_all_Model_ID_Predict_out_all
     , file =
         file.path(
-          path_results_out
-        , path_prefix_out
+          path_list$path_results_out
+        , path_list$path_prefix_out
         , paste0(
-            path_prefix_out
+            path_list$path_prefix_out
           , "__"
           , "dat_all_Model_ID_Predict_out_all"
           , ".RData"
@@ -875,10 +855,10 @@ dd_prediction_model <-
       x    = dat_all_Model_ID_Predict_out_all
     , file =
         file.path(
-          path_results_out
-        , path_prefix_out
+          path_list$path_results_out
+        , path_list$path_prefix_out
         , paste0(
-            path_prefix_out
+            path_list$path_prefix_out
           , "__"
           , "dat_all_Model_ID_Predict_out_all"
           , ".csv"
@@ -890,10 +870,10 @@ dd_prediction_model <-
       x    = dat_all_Model_ID_Predict_out
     , file =
         file.path(
-          path_results_out
-        , path_prefix_out
+          path_list$path_results_out
+        , path_list$path_prefix_out
         , paste0(
-            path_prefix_out
+            path_list$path_prefix_out
           , "__"
           , "dat_all_Model_ID_Predict_out"
           , ".csv"
@@ -919,7 +899,7 @@ dd_prediction_model <-
   p <- p + geom_hline(aes(yintercept = out_e_rf_Model_DD_Train$o_class_sel_ROC$roc_curve_best$Yes$thresh), colour = "black", linetype = c("none", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash")[3], linewidth = 0.3, alpha = 0.5)
   p <- p + geom_point(alpha = 1)
   p <- p + scale_x_discrete(breaks = NULL)
-  if ( DD_Group == "All" ) {
+  if ( params$DD_Group == "All" ) {
     p <- p + facet_grid(. ~ Client_Waiver, space = "free_x", drop = TRUE)
   }
   p <- p + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) # remove axis labels
@@ -947,10 +927,10 @@ dd_prediction_model <-
 
   ggsave(
         file.path(
-          path_results_out
-        , path_prefix_out
+          path_list$path_results_out
+        , path_list$path_prefix_out
         , paste0(
-            path_prefix_out
+            path_list$path_prefix_out
           , "__"
           , "plot_predictions"
           , ".png"
@@ -989,10 +969,10 @@ dd_prediction_model <-
 
   ggsave(
         file.path(
-          path_results_out
-        , path_prefix_out
+          path_list$path_results_out
+        , path_list$path_prefix_out
         , paste0(
-            path_prefix_out
+            path_list$path_prefix_out
           , "__"
           , "plot_projection_class_sel"
           , ".png"

@@ -177,7 +177,7 @@ dd_read_client_Syncronys <-
 
   #dat_client_Syncronys |> str()
 
-  name_dat |> dd_save_to_RData()
+  #name_dat |> dd_save_to_RData()
   # if (!is.null(path_results_dat)) {
   #   save(
   #     list = ls(pattern = name_dat)

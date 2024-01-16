@@ -40,7 +40,7 @@ dd_read_client_CaseNotes <-
   # Detail sheets
   dat_sheet_detail <-
     erikmisc::e_read_data_subdir_into_lists(
-      fn_path                 = file.path(path_data, "CaseNotes_Detail")
+      fn_path                 = file.path(path_data, "CaseNotes_DD_Detail")
     , fn_detect               = "xlsx$"
     , sw_fn_or_dat            = c("fn", "dat")[2]
     , sw_exclude_empty_dir    = c(TRUE, FALSE)[1]
@@ -106,7 +106,7 @@ dd_read_client_CaseNotes <-
   # Questionnaire sheets
   dat_sheet_questionnaire <-
     erikmisc::e_read_data_subdir_into_lists(
-      fn_path                 = file.path(path_data, "CaseNotes_Questionnaire")
+      fn_path                 = file.path(path_data, "CaseNotes_DD_Questionnaire")
     , fn_detect               = "xlsx$"
     , sw_fn_or_dat            = c("fn", "dat")[2]
     , sw_exclude_empty_dir    = c(TRUE, FALSE)[1]
@@ -162,7 +162,7 @@ dd_read_client_CaseNotes <-
   # Weights
   dat_sheet_weights <-
     readxl::read_xlsx(
-      path = file.path(path_data, "DD Waiver PRM Questions with Weights.xlsx")
+      path = file.path(path_data, "DD Waiver RPM Questions with Weights.xlsx")
     )
 
   list_client_CaseNotes_Weights <- list()
@@ -241,7 +241,7 @@ dd_read_client_CaseNotes <-
 
   #dat_client_CaseNotes |> str()
 
-  name_dat |> dd_save_to_RData()
+  #name_dat |> dd_save_to_RData()
   # if (!is.null(path_results_dat)) {
   #   save(
   #     list = ls(pattern = name_dat)

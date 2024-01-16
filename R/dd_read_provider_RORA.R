@@ -183,7 +183,7 @@ dd_read_provider_RORA <-
 
   #dat_provider_RORA |> str()
 
-  name_dat |> dd_save_to_RData()
+  #name_dat |> dd_save_to_RData()
   # if (!is.null(path_results_dat)) {
   #   save(
   #     list = ls(pattern = name_dat)

@@ -1,0 +1,366 @@
+---
+title:        NMDOH DD Read and format data
+#subtitle:     Subtitle
+author:       Erik Erhardt
+date:         last-modified # today, now, last-modified
+date-format:  long          # full, long, medium, short, iso,   https://quarto.org/docs/reference/dates.html
+format:
+  html:
+    theme:                  litera
+    highlight-style:        atom-one
+    page-layout:            full      # article, full   # https://quarto.org/docs/output-formats/page-layout.html
+    toc:                    true
+    toc-depth:              4
+    toc-location:           body      # left, body, right
+    number-sections:        true      # true, false
+    number-depth:           3
+    code-fold:              show      # true (initially hidden), false, show (initially shown)
+    code-tools:                       # menu top-right to show/hide all code
+      toggle:               true
+      caption:              "Code"    # none
+      source:               false
+    code-overflow:          scroll    # scroll, wrap
+    code-block-bg:          true
+    code-block-border-left: "#30B0E0"
+    df-print:               paged     # default, kable, tibble, paged   # https://quarto.org/docs/computations/r.html
+fig-width:                  6
+fig-height:                 4
+execute: # https://quarto.org/docs/computations/execution-options.html, https://quarto.org/docs/computations/r.html
+  cache:    false   # false, true
+  eval:     true    # true, false  Evaluate the code chunk (if false, just echos the code into the output).
+  echo:     true    # true, false  Include the source code in output
+---
+
+<!---
+# Erik's compile commands in R:
+  fn_qmd <- "NMDOH_DD_Step-1_ReadFormatData_20240109.qmd"
+  setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts")
+  quarto::quarto_render(input = fn_qmd)
+-->
+
+```{r init}
+#| output:  false
+#| warning: false
+#| error:   false
+
+options(
+  dplyr.print_min         = 6
+, dplyr.print_max         = 6
+, pillar.max_footer_lines = 2
+, pillar.min_chars        = 15
+, stringr.view_n          = 6
+, cli.num_colors          = 0       # Temporarily deactivate cli output for quarto
+, cli.hyperlink           = FALSE
+, pillar.bold             = TRUE
+, width                   = 77      # 80 - 3 for #> comment
+, readr.show_col_types    = FALSE   # readr::read_csv(), do not show column types
+, str                     = strOptions(list.len = 1e3)
+, knitr.kable.NA          = ''      # Display NAs as blanks
+)
+
+my_seed <- 76543
+set.seed(my_seed)
+
+library(nmdohddrisk)
+library(erikmisc)
+library(tidyverse)
+
+ggplot2::theme_set(ggplot2::theme_bw(base_size = 12))
+
+# Parallel processing
+library(parallel)
+options(rf.cores = parallel::detectCores() - 2) # OpenMP Parallel Processing
+options(mc.cores = parallel::detectCores() - 2) # R-side Parallel Processing
+```
+
+# Data: Read, plot, save, and generate codebooks
+
+Num | Object name               | |  Data   |  Features | COMPLETE
+----|---------------------------|-|---------|-----------|---------
+  1 | Client_Matching           | |    DONE |    DONE   |  YES
+  1 | Client_WaiverType         | |    DONE |    DONE   |  YES
+  2 | Client_BBS                | |    DONE |    DONE   |  YES
+  3 | Client_CaseNotes          | |    DONE |  WORK     | no
+  4 | Client_Conduent_Omnicad   | |    DONE |    DONE   |  YES
+  5 | Client_GER                | |    DONE |    DONE   |  YES
+  6 | Client_IMB_ANE            | |    DONE |    DONE   |  YES
+  7 | Client_MedFrag_LOC        | |   LATER |   LATER   | no
+  8 | Client_RORA               | |    DONE |    DONE   |  YES
+  9 | Client_Syncronys          | |    DONE |    DONE   |  YES
+ 10 | Provider_Matching         | |    DONE |  WORK     | no
+ 11 | Provider_Conduent_Omnicad | |   LATER |   LATER   | no
+ 12 | Provider_PDS_Scorecard    | |  WORK   |   LATER   | no
+ 13 | Provider_QMB              | |   LATER |   LATER   | no
+ 14 | Provider_RORA             | |    DONE |  WORK     | no
+
+
+
+## Set and create output folders
+
+```{r path_folders}
+sw_plot_missing = c(TRUE, FALSE)[1]
+sw_codebook     = c(TRUE, FALSE)[2]
+
+date_today <-
+  lubridate::today()
+
+path_results <-
+  "../Results"
+
+path_results_dat <-
+  file.path(
+    path_results
+  , paste0(
+      "dat_"
+    , date_today
+    )
+  )
+path_results_out <-
+  file.path(
+    path_results
+  , paste0(
+      "out_"
+    , date_today
+    )
+  )
+
+if (!file.exists(path_results)) {
+  dir.create(path_results)
+}
+if (!file.exists(path_results_dat)) {
+  dir.create(path_results_dat)
+}
+if (!file.exists(path_results_out)) {
+  dir.create(path_results_out)
+}
+```
+
+--------------------------------------------------------------------------------
+
+## Client data
+
+```{r client}
+## Client_Matching
+## Matching demographics
+dat_client_Match <-
+  dd_read_client_Match(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_Matching"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_Match <-
+  dat_client_Match |>
+  dd_features_client_Match()
+"dat_client_Match" |> dd_save_to_RData()
+
+
+## Client_WaiverType
+## Waiver type, add to Matching
+dat_client_WaiverType <-
+  dd_read_client_WaiverType(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_WaiverType"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_Match <-
+  dat_client_WaiverType |>
+  dd_features_client_WaiverType(dat_client_Match = dat_client_Match)
+"dat_client_Match" |> dd_save_to_RData()
+
+
+## Client_BBS
+## Bureau of Behavioral Supports (BBS)
+dat_client_BBS <-
+  dd_read_client_BBS(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_BBS"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_BBS <-
+  dat_client_BBS |>
+  dd_features_client_BBS(dat_client_Match = dat_client_Match)
+"dat_client_BBS" |> dd_save_to_RData()
+
+
+## Client_CaseNotes
+dat_client_CaseNotes <-
+  dd_read_client_CaseNotes(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_CaseNotes"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_CaseNotes <-
+  dat_client_CaseNotes |>
+  dd_features_client_CaseNotes(dat_client_Match = dat_client_Match)
+"dat_client_CaseNotes" |> dd_save_to_RData()
+
+
+## Client_Conduent_Omnicad
+dat_client_Conduent_Omnicad <-
+  dd_read_client_Conduent_Omnicad(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_Conduent_Omnicad"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_Conduent_Omnicad <-
+  dat_client_Conduent_Omnicad |>
+  dd_features_client_Conduent_Omnicad(dat_client_Match = dat_client_Match)
+"dat_client_Conduent_Omnicad" |> dd_save_to_RData()
+
+# 12/17/2023 Replaced by Client_WaiverType
+#
+# # Update Match with Waiver derived from Conduent_Omnicad
+# dat_client_Match <-
+#   dat_client_Match |>
+#   dplyr::left_join(
+#     list_dat_client_Conduent_Omnicad[[ "dat_client_Conduent_Omnicad_Waiver" ]]
+#   , by = dplyr::join_by(Client_System_ID)
+#   )
+# "dat_client_Match" |> dd_save_to_RData()
+
+
+## Client_GER
+## Therap (GER)
+dat_client_GER <-
+  dd_read_client_GER(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_GER"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_GER <-
+  dat_client_GER |>
+  dd_features_client_GER(dat_client_Match = dat_client_Match)
+"dat_client_GER" |> dd_save_to_RData()
+
+
+## Client_IMB_ANE
+## ANE reports from IMB database
+dat_client_IMB_ANE <-
+  dd_read_client_IMB_ANE(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_IMB_ANE"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_IMB_ANE <-
+  dat_client_IMB_ANE |>
+  dd_features_client_IMB_ANE(dat_client_Match = dat_client_Match)
+"dat_client_IMB_ANE" |> dd_save_to_RData()
+
+
+## Client_MedFrag_LOC
+
+
+## Client_RORA
+## RORA
+dat_client_RORA <-
+  dd_read_client_RORA(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_RORA"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_RORA <-
+  dat_client_RORA |>
+  dd_features_client_RORA(dat_client_Match = dat_client_Match)
+"dat_client_RORA" |> dd_save_to_RData()
+
+## Client_Syncronys
+
+# 10/25/2023
+# Also read Admits-DDSD_REG_NM-Yearly_20231025.txt
+# 1 year of syncronys data for everyone that is currently on our roster.
+# https://mail.google.com/mail/u/0/#inbox/FMfcgzGwHLpZKlflmvdWdhJLdkBgBlrQ
+
+## Syncronys
+dat_client_Syncronys <-
+  dd_read_client_Syncronys(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Client_Syncronys"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_client_Syncronys <-
+  dat_client_Syncronys |>
+  dd_features_client_Syncronys(dat_client_Match = dat_client_Match)
+"dat_client_Syncronys" |> dd_save_to_RData()
+
+```
+
+## Provider data
+
+```{r provider}
+## Provider_Matching
+dat_provider_Match <-
+  dd_read_provider_Match(
+    fn_list           = NULL
+  , path_data         = "../Data_in/Provider_Matching"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_provider_Match <-
+  dat_provider_Match |>
+  dd_features_provider_Match()
+"dat_provider_Match" |> dd_save_to_RData()
+
+## Provider_Conduent_Omnicad
+
+## Provider_PDS_Scorecard
+## PDS Provider Data Summary (Scorecard)
+# * Manually format header and footer to make it easy to read.
+# Waiting for data with Provider IDs
+dat_provider_PDS <-
+  dd_read_provider_PDS(
+    fn_list           = c(
+                          "Scorecard Jan 23.xlsx"
+                        , "Scorecard June 23.xlsx"
+                        , "Scorecard March 23.xlsx"
+                        , "Scorecard Oct 22.xlsx"
+                        )
+  , path_data         = "../Data_in/Provider_PDS_Scorecard"
+  , path_results_dat  = path_results_dat
+  , sw_plot_missing   = sw_plot_missing
+  , sw_codebook       = sw_codebook
+  )
+dat_provider_PDS <-
+  dat_provider_PDS |>
+  dd_features_provider_PDS()
+"dat_provider_PDS" |> dd_save_to_RData()
+
+
+## Provider_QMB
+
+# ## Provider_RORA
+# ## RORA
+# # 9/8/23 Waiting for new data, requested 3 years.
+# dat_provider_RORA <-
+#   dd_read_provider_RORA(
+#     fn_list           = NULL
+#   , path_data         = "../Data_in/Provider_RORA"
+#   , path_results_dat  = path_results_dat
+#   , sw_plot_missing   = sw_plot_missing
+#   , sw_codebook       = sw_codebook
+#   )
+# dat_provider_RORA <-
+#   dat_provider_RORA |>
+#   dd_features_provider_RORA()
+# "dat_provider_RORA" |> dd_save_to_RData()
+
+```
+
