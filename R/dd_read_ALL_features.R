@@ -264,8 +264,6 @@ dd_read_ALL_features <-
   # "dat_provider_RORA" |> dd_save_to_RData()
 
 
-  setwd(dir_old)
-
   invisible(NULL)
 
 } # dd_read_ALL_features
