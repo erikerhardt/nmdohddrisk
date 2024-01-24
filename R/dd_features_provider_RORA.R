@@ -30,4 +30,4 @@ dd_features_provider_RORA <-
 
   return(dat_provider_RORA)
 
-} # dd_read_provider_RORA
+} # dd_features_provider_RORA

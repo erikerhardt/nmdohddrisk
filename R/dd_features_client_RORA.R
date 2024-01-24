@@ -80,4 +80,4 @@ dd_features_client_RORA <-
 
   return(dat_client_RORA)
 
-} # dd_read_client_RORA
+} # dd_features_client_RORA

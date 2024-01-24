@@ -89,7 +89,7 @@ dd_prediction_model <-
 
   name_analysis <-
     paste0(
-      "NM DOH DD Prediction Model: "
+      "NM DOH DD Risk Prediction Model: "
     , path_list$path_prefix_out
     , ", "
     , "Group "
@@ -268,6 +268,7 @@ dd_prediction_model <-
       , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
       , dat_client_BBS                = dat_client_BBS
       , dat_client_CaseNotes          = dat_client_CaseNotes
+      , dat_client_eCHAT              = dat_client_eCHAT
       , date_Current                  = date_Current
       , sw_unit_of_analysis           = sw_unit_of_analysis
       , m_months_GER                  = m_months_GER
@@ -474,6 +475,7 @@ dd_prediction_model <-
         , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
         , dat_client_BBS                = dat_client_BBS
         , dat_client_CaseNotes          = dat_client_CaseNotes
+        , dat_client_eCHAT              = dat_client_eCHAT
         , date_Current                  = params$date_Current
         , m_months_GER                  = row_iter$GER
         , m_months_Syncronys            = row_iter$Syncronys
@@ -617,6 +619,7 @@ dd_prediction_model <-
     , dat_client_Conduent_Omnicad   = dat_client_Conduent_Omnicad
     , dat_client_BBS                = dat_client_BBS
     , dat_client_CaseNotes          = dat_client_CaseNotes
+    , dat_client_eCHAT              = dat_client_eCHAT
     , date_Current                  = date_Current
     , sw_unit_of_analysis           = sw_unit_of_analysis
     , m_months_GER                  = m_months_GER

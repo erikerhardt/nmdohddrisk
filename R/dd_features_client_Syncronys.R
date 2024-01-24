@@ -54,4 +54,4 @@ dd_features_client_Syncronys <-
 
   return(dat_client_Syncronys)
 
-} # dd_read_client_Syncronys
+} # dd_features_client_WaiverType

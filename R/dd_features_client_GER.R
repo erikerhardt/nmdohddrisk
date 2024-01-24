@@ -202,4 +202,4 @@ dd_features_client_GER <-
 
   return(dat_client_GER)
 
-} # dd_read_client_GER
+} # dd_features_client_GER

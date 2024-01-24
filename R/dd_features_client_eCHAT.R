@@ -1,9 +1,9 @@
-#' Features for Client BBS
+#' Features for Client eCHAT
 #'
-#' @param dat_client_BBS      dat_client_BBS data from \code{dd_read_client_BBS()}
+#' @param dat_client_eCHAT      dat_client_eCHAT data from \code{dd_read_client_eCHAT()}
 #' @param dat_client_Match    dat_client_Match data from \code{dd_read_client_Match()}
 #'
-#' @return dat_client_BBS
+#' @return dat_client_eCHAT
 #' @import dplyr
 #' @import forcats
 #' @import lubridate
@@ -14,34 +14,41 @@
 #'
 #' @examples
 #' \dontrun{
-#' dd_features_client_BBS(
-#'     dat_client_BBS
+#' dd_features_client_eCHAT(
+#'     dat_client_eCHAT
 #'   , dat_client_Match  = dat_client_Match
 #'   )
 #' }
-dd_features_client_BBS <-
+dd_features_client_eCHAT <-
   function(
-    dat_client_BBS    = NULL
+    dat_client_eCHAT    = NULL
   , dat_client_Match  = dat_client_Match
   ) {
 
-  dat_client_BBS <-
+  dat_client_eCHAT <-
     dat_client_Match |>
     dplyr::select(
       Client_System_ID
     , Client_SSN
     ) |>
     dplyr::left_join(
-      dat_client_BBS
+      dat_client_eCHAT
     , by = dplyr::join_by(Client_SSN)
     ) |>
     tidyr::replace_na(
-      list(BBS_AtRisk = 0)
+      list(
+        eCHAT_TotalYs    = 0
+      , eCHAT_TotalScore = 0
+      , eCHAT_Acuity     = "None"
+      , dat_client_eCHAT = TRUE
+      )
     ) |>
     dplyr::select(
       Client_System_ID
-    , BBS_AtRisk
-    , BBS_Date
+    , Date
+    , eCHAT_TotalYs
+    , eCHAT_TotalScore
+    , eCHAT_Acuity
     ) |>
     dplyr::relocate(
       Client_System_ID
@@ -50,6 +57,6 @@ dd_features_client_BBS <-
       Client_System_ID
     )
 
-  return(dat_client_BBS)
+  return(dat_client_eCHAT)
 
-} # dd_features_client_BBS
+} # dd_features_client_eCHAT

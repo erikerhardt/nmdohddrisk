@@ -14,6 +14,7 @@ dd_list_dat_each_Model_Date_features(
   dat_client_Conduent_Omnicad = dat_client_Conduent_Omnicad,
   dat_client_BBS = dat_client_BBS,
   dat_client_CaseNotes = dat_client_CaseNotes,
+  dat_client_eCHAT = dat_client_eCHAT,
   date_Current = date_Current,
   sw_unit_of_analysis = sw_unit_of_analysis,
   m_months_GER = m_months_GER,

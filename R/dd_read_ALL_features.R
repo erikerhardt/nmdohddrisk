@@ -126,6 +126,23 @@ dd_read_ALL_features <-
   # "dat_client_Match" |> dd_save_to_RData()
 
 
+  ## Client_eCHAT
+  ## Acuity
+  dat_client_eCHAT <-
+    dd_read_client_eCHAT(
+      fn_list           = NULL
+    , path_data         = file.path(params$working_directory, path_list$path_dat_in, "Client_eCHAT")
+    , path_results_dat  = file.path(params$working_directory, path_list$path_results_dat)
+    , sw_plot_missing   = sw_plot_missing
+    , sw_codebook       = sw_codebook
+    )
+  dat_client_eCHAT <-
+    dat_client_eCHAT |>
+    dd_features_client_eCHAT(dat_client_Match = dat_client_Match)
+  #"dat_client_eCHAT" |> dd_save_to_RData()
+  save(dat_client_eCHAT, file = file.path(params$working_directory, path_list$path_results_dat, paste0("dat_client_eCHAT", ".RData")))
+
+
   ## Client_GER
   ## Therap (GER)
   dat_client_GER <-
