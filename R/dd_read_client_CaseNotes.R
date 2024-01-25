@@ -48,7 +48,7 @@ dd_read_client_CaseNotes <-
 
   dat_client_CaseNotes_all <- list()
 
-  for (i_group in seq_along(names_list_Detail)) {
+  for (i_group in seq_len(nrow(names_list_CaseNotes))) {
     ## i_group = 1
 
     # Detail sheets
