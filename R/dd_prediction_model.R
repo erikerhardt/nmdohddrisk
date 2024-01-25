@@ -791,7 +791,6 @@ dd_prediction_model <-
       , Client_Waiver
       #, Client_Region
       , Client_County
-      # XXX Add street address
       , Client_Res_Addr_Line_1
       , Client_Res_Addr_Line_2
       , Client_Res_Addr_City
