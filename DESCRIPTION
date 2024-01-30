@@ -16,7 +16,7 @@ License: MIT + file LICENSE
 URL: https://github.com/erikerhardt/nmdohddrisk
 BugReports: https://github.com/erikerhardt/nmdohddrisk/issues
 Encoding: UTF-8
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.1
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 NeedsCompilation: no

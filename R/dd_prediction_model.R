@@ -787,6 +787,7 @@ dd_prediction_model <-
       dat_client_Match |>
       dplyr::select(
         Client_System_ID
+      , Client_TherapID
       , Client_SSN
       , Client_Waiver
       #, Client_Region
@@ -817,6 +818,8 @@ dd_prediction_model <-
     dat_all_Model_ID_Predict_out_all |>
     dplyr::select(
       Client_System_ID
+    , Client_TherapID
+    , Client_SSN
     , Probability_ANE
     , Class
     , Sens
@@ -828,7 +831,6 @@ dd_prediction_model <-
     , ANE_After_First
     , ANE_After_Last
     , Client_Waiver
-    , Client_SSN
     , Client_Res_Addr_Line_1
     , Client_Res_Addr_Line_2
     , Client_Res_Addr_City
