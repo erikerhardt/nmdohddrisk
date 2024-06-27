@@ -64,6 +64,7 @@ dd_read_client_IMB_ANE <-
       , NeglectAddedByDHI_20   = NeglectAddedByDHI_20   |> as.numeric()
       , ClosureDate            = ClosureDate            |> lubridate::as_date()
       , DateCPAP               = DateCPAP               |> lubridate::as_date()
+      , PullDate               = PullDate               |> lubridate::as_date()
       )
   }
 
