@@ -62,6 +62,8 @@ dd_read_client_IMB_ANE <-
       , SexualAbAlleg          = SexualAbAlleg          |> as.numeric()
       , AbuseAddedByDHI_19     = AbuseAddedByDHI_19     |> as.numeric()
       , NeglectAddedByDHI_20   = NeglectAddedByDHI_20   |> as.numeric()
+      , IncidentDate           = IncidentDate           |> lubridate::as_date()
+      , IncidentDateTime       = IncidentDateTime       |> lubridate::as_datetime()
       , ClosureDate            = ClosureDate            |> lubridate::as_date()
       , DateCPAP               = DateCPAP               |> lubridate::as_date()
       , PullDate               = PullDate               |> lubridate::as_date()
