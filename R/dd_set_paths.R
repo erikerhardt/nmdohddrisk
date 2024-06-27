@@ -35,17 +35,6 @@ dd_set_paths <-
       , params$date_today
       )
     )
-
-  if (!file.exists(path_results)) {
-    dir.create(path_results)
-  }
-  if (!file.exists(path_results_dat)) {
-    dir.create(path_results_dat)
-  }
-  if (!file.exists(path_results_out)) {
-    dir.create(path_results_out)
-  }
-
   path_prefix_out <-
     paste0(
       params$path_prefix_out
@@ -54,6 +43,19 @@ dd_set_paths <-
     , "_"
     , params$DD_Group
     )
+
+  #if (!file.exists(path_results)) {
+    dir.create(path_results, showWarnings = FALSE)
+  #}
+  #if (!file.exists(path_results_dat)) {
+    dir.create(path_results_dat, showWarnings = FALSE)
+  #}
+  #if (!file.exists(path_results_out)) {
+    dir.create(path_results_out, showWarnings = FALSE)
+  #}
+  #if (!file.exists(path_results_out)) {
+    dir.create(file.path(path_results_out, path_prefix_out), showWarnings = FALSE)
+  #}
 
   # save paths to return from function
   path_list <- list()
