@@ -1,0 +1,416 @@
+---
+#
+# NMDOH Data Team:
+#
+# Step 0: Open this file in RStudio                                    -------
+# Step 1: Set these parameters and rename output-file                  -------
+# Step 2: RStudio, click "Render"  (will run for a few hours)          -------
+# Step 3: Close RStudio, review pdf output                             -------
+#
+#
+params:
+  DD_Group            : PARAMS_DD_Group           # c("All", "DD", "MV", "MF")[1]
+  date_today          : PARAMS_date_today         # determines name of dat_ and out_ folders for results
+  date_Current        : PARAMS_date_Current       # determines last date in data for analysis
+  path_prefix_out     : PARAMS_path_prefix_out    # prefix for out folder and model output
+  sw_read_data        : PARAMS_sw_read_data       # read data prior to fitting model (set to FALSE if running multiple models on same data)
+  sw_run_model        : PARAMS_sw_run_model       # fit model (set to FALSE if model already run and want to recompile document)
+  working_directory   : PARAMS_working_directory  # set to FALSE if working_drive is short
+  sw_Win_drive_subst  : PARAMS_sw_Win_drive_subst # set sw_Win_drive_subst to FALSE if working_drive is short
+  sw_Win_path_to_subst: PARAMS_sw_Win_path_to_subst
+output-file:            PARAMS_output_file
+#  DD_Group          : "All"         # c("All", "DD", "MV", "MF")[1]
+#  date_today        : "2024-01-25"  # determines name of dat_ and out_ folders for results
+#  date_Current      : "2024-01-01"  # determines last date in data for analysis
+#  path_prefix_out   : "out_V17"     # prefix for out folder and model output
+#  sw_read_data      : FALSE         # read data prior to fitting model (set to FALSE if running multiple models on same data)
+#  sw_run_model      : FALSE         # fit model (set to FALSE if model already run and want to recompile document)
+#  # Should be detailed path to "Risk_Prediction_Model/Scripts"
+#  working_directory : "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Zdrive/Risk_Prediction_Model/Scripts"
+#  # update output-file name to match the parameters set above
+#output-file: "NMDOH_DD_RiskPredictionModel_Data-Model-Summary_20240125__out_V17_2024_01_01_All.pdf"
+#output-file: "`r paste0('NMDOH_DD_RiskPredictionModel_Data-Model-Summary_', params$date_today, '_', params$path_prefix_out, '_', params$date_Current, '_', params$DD_Group, '.pdf')`"
+#
+#
+# ===========================================================================
+# Please do not edit anything below -----------------------------------------
+title:        "NMDOH DD Risk Prediction Model"
+subtitle:     "Read and format data, Run Model, Summarize model results"
+author:       "Prof. Erik Erhardt, PhD, StatAcumen.com"
+date:         last-modified # today, now, last-modified
+date-format:  long          # full, long, medium, short, iso,   https://quarto.org/docs/reference/dates.html
+format:
+  #html:
+  #  theme:                  litera
+  #  highlight-style:        atom-one
+  #  page-layout:            full      # article, full   # https://quarto.org/docs/output-formats/page-layout.html
+  #  toc:                    true
+  #  toc-depth:              4
+  #  toc-location:           body      # left, body, right
+  #  number-sections:        true      # true, false
+  #  number-depth:           3
+  #  code-fold:              show      # true (initially hidden), false, show (initially shown)
+  #  code-tools:                       # menu top-right to show/hide all code
+  #    toggle:               true
+  #    caption:              "Code"    # none
+  #    source:               false
+  #  code-overflow:          scroll    # scroll, wrap
+  #  code-block-bg:          true
+  #  code-block-border-left: "#30B0E0"
+  #  df-print:               paged     # default, kable, tibble, paged   # https://quarto.org/docs/computations/r.html
+  pdf:                                # Quarto uses KOMA Script document classes by default  https://ctan.org/pkg/koma-script
+    keep-tex:               true      # keep .tex file that is produced
+    documentclass:          scrartcl  # article, report, book, scrartcl, scrreprt, scrbook
+    papersize:              letter
+    classoption:            [oneside,11pt] # [twocolumn, landscape]
+    geometry:
+      - margin = 0.3in
+      #- top  = 30mm
+      #- left = 20mm
+      #- heightrounded
+    fontfamily:             libertinus
+    cite-method:            biblatex
+    toc:                    true
+    toc-depth:              4
+    toc-title:              Contents
+    number-sections:        true
+    number-depth:           5
+    lof:                    false
+    lot:                    false
+    colorlinks:             true
+    highlight-style:        atom-one  # a11y, arrow, atom-one, ayu, breeze, github, gruvbox; pygments, tango, espresso, zenburn, kate, monochrome, breezedark, haddock; dracula, mokokai, nord, oblivion, printing, radical, solarized, vim-dark
+fig-width:                  6
+fig-height:                 4
+execute: # https://quarto.org/docs/computations/execution-options.html, https://quarto.org/docs/computations/r.html
+  cache:    false   # false, true
+  eval:     true    # true, false  Evaluate the code chunk (if false, just echos the code into the output).
+  echo:     false   # true, false  Include the source code in output
+---
+
+<!---
+# Erik's compile commands in R:
+# Step 2: copy/paste these commands to RStudio Console window
+
+  fn_qmd <- "NMDOH_DD_RiskPredictionModel_Data-Model-Summary_V17_20260205.qmd"
+  setwd("D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Ydrive/Risk_Prediction_Model/Scripts")
+  fn_pdf <-
+    paste0(
+      fn_qmd
+    , "__"
+    , "out_V17"             # params$path_prefix_out
+    , "_"
+    , "2024_01_01"          # params$date_Current
+    , "_"
+    , "All"                 # params$DD_Group
+    ,".pdf"
+    )
+  quarto::quarto_render(input = fn_qmd, output_file = fn_pdf, output_format = "pdf")
+
+# End of commands
+-->
+
+
+```{r init}
+#| output:  false
+#| warning: false
+#| error:   false
+
+options(
+  dplyr.print_min         = 6
+, dplyr.print_max         = 6
+, pillar.max_footer_lines = 2
+, pillar.min_chars        = 15
+, stringr.view_n          = 6
+, cli.num_colors          = 0       # Temporarily deactivate cli output for quarto
+, cli.hyperlink           = FALSE
+, pillar.bold             = TRUE
+, width                   = 77      # 80 - 3 for #> comment
+, readr.show_col_types    = FALSE   # readr::read_csv(), do not show column types
+, str                     = strOptions(list.len = 1e3)
+, knitr.kable.NA          = ''      # Display NAs as blanks
+)
+
+my_seed <- 76543
+set.seed(my_seed)
+
+library(nmdohddrisk)
+library(erikmisc)
+library(tidyverse)
+
+ggplot2::theme_set(ggplot2::theme_bw(base_size = 12))
+
+# Parallel processing
+library(parallel)
+options(rf.cores = parallel::detectCores() - 1) # OpenMP Parallel Processing
+options(mc.cores = parallel::detectCores() - 1) # R-side Parallel Processing
+
+## Testing params
+# params <- list()
+# params$date_Current          = "2022-01-01"
+# params$DD_Group              = "All"
+# params$date_today            = "2026-02-10"
+# params$path_prefix_out       = "out_V17"
+# params$sw_read_data          = TRUE
+# params$sw_run_model          = FALSE
+# #params$working_directory     = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Ydrive/Risk_Prediction_Model/Scripts"
+# params$working_directory     = "S:/Risk_Prediction_Model/Scripts"
+# params$sw_Win_drive_subst    = "S:"    # set to FALSE if working_drive is short
+# params$sw_Win_path_to_subst  = "D:/Dropbox/StatAcumen/consult/Industry/2023_NM_DOH_DDWaiver/data/Ydrive"
+
+
+# if Windows and sw_Win_drive_subst set, then SUBST the drive to a drive letter
+#   resolves some issues with very long file names
+if (Sys.info()["sysname"] == "Windows" & !isFALSE(params$sw_Win_drive_subst)) {
+  working_drive_win <-
+    params$sw_Win_path_to_subst |>
+    stringr::str_replace_all(
+      pattern     = "/"
+    , replacement = "\\\\"
+    )
+
+  cmd_subst <-
+    paste(
+      "subst"
+    , params$sw_Win_drive_subst
+    , working_drive_win
+    , sep = " "
+    )
+
+  # substitute drive letter for working_drive path
+  system(cmd_subst)
+} # Win subst
+setwd(params$working_directory)
+
+path_list <-
+  dd_set_paths(
+    params        = params
+  , path_dat_in   = "../Data_in"
+  , path_results  = "../Results"
+  )
+```
+
+* **Risk Prediction Model parameters**
+    * `DD_Group`            : `r params$DD_Group           `
+    * `date_today`          : `r params$date_today         `
+    * `date_Current`        : `r params$date_Current       `
+    * `path_prefix_out`     : `r params$path_prefix_out    `
+    * `sw_read_data`        : `r params$sw_read_data       `
+    * `sw_run_model`        : `r params$sw_run_model       `
+    * `working_drive`       : `r params$working_drive      `
+    * `sw_Win_drive_subst`  : `r params$sw_Win_drive_subst `
+    * `working_directory`   : `r params$working_directory  `
+
+![](./logo/nmdohddrisk.png){width=1.25in fig-align="right"}
+
+
+{{< pagebreak >}}
+
+# Read and save data
+
+`https://github.com/erikerhardt/nmdohddrisk`
+
+```{r logo}
+#| output:  true
+nmdohddrisk_logo()
+```
+
+```{r read_data}
+if (params$sw_read_data) {
+  dd_read_ALL_features(
+      params              = params
+    , path_list           = path_list
+    , sw_plot_missing     = c(TRUE, FALSE)[1]
+    , sw_codebook         = c(TRUE, FALSE)[2]
+    )
+}
+```
+
+
+# Run Risk Prediction Model
+
+* Risk Prediction Model log file:
+    * `r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out,"__LOG__yyyymmdd-hhmmss.txt"))`
+
+```{r model}
+if (params$sw_run_model) {
+
+  tictoc::tic(msg = "Timer") # start timer
+
+  dd_prediction_model(
+      params                        = params
+    , path_list                     = path_list
+    , m_months_GER                  = "4 months"  # optim balanced
+    , m_months_Syncronys            = "3 months"  # optim balanced
+    , m_months_Conduent_Omnicad     = "4 months"  # optim balanced
+    , m_months_RORA                 = "4 months"  # optim balanced
+    , m_months_BBS                  = "2 months"  # optim balanced
+    , m_months_CaseNotes            = "4 months"  # optim balanced
+    , sw_rfsrc_ntree                = 500
+    , sw_alpha_sel                  = 0.10
+    , sw_unit_of_analysis           = c("Client_System_ID", "Client_System_ID__ANE_Date")[1]
+    , sw_select_full                = c("select", "full")[1]
+    , var_subgroup_analysis         = "Client_Waiver"
+    , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
+    , sw_quick_full_only            = FALSE
+    , n_boot_resamples              = 20
+    , sw_m_months_select_quick_full = c(FALSE, TRUE)[1]  # quick full
+    , sw_m_months_values            = NULL
+    )
+
+  tictoc::toc() # end timer
+
+}
+```
+
+
+{{< pagebreak >}}
+
+# Summarize model results
+
+## Prediction results
+
+* Prediction results are in Folder:
+    * `r file.path(params$working_drive, params$working_directory)`
+* in File:
+    * `r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out,"__dat_all_Model_ID_Predict_out.csv"))`
+
+## Model diagnostics and statistics
+
+### Model fit summary
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_rf_train_all_summary.png"                                        ))`)
+
+### Selected model, ROC Curve
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC_2-Yes.png"                                       ))`)
+
+### Selected model, Predictions
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_predictions.png"                                                 ))`)
+
+### Selected model, Variable Importance
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_importance.png"                                      ))`)
+
+### Selected model, Partial Effects
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_partial_effects_2-Yes.png"                           ))`)
+
+### Selected model, ROC Curve by Client_Waiver Group
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC__subgroup__Client_Waiver = DD_2-Yes.png"         ))`)
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC__subgroup__Client_Waiver = MF_2-Yes.png"         ))`)
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC__subgroup__Client_Waiver = MV_2-Yes.png"         ))`)
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC__subgroup__Client_Waiver = None_2-Yes.png"       ))`)
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_o_class_sel_ROC__subgroup__Client_Waiver = Transition_2-Yes.png" ))`)
+
+### Data projected from high-dimensional space into 2D
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_projection_train.png"                                            ))`)
+
+### Predictions projected from high-dimensional space into 2D
+
+![](`r file.path(path_list$path_results_out, path_list$path_prefix_out, paste0(path_list$path_prefix_out, "__plot_projection_class_sel.png"                                        ))`)
+
+
+
+
+
+
+{{< pagebreak >}}
+
+# Model V17 overview
+
+1. **Predictive Model**
+    * RESULTS `out_e_rf_Model_01$plot_o_class_sel_ROC$roc_curve_best$Yes |> t()`
+        * Performance very good:
+            * Group                "Yes"
+            * AUC
+            * Sensitivity
+            * Specificity
+            * Balanced Accuracy
+    * Predict ANE Substantiated, first only
+        * If Substantiated, then use data up to Date of their first ANE Substantiated
+        * If not Substantiated or no ANE report, then use up to current Date
+    * Features
+        * Match:
+            * Gender
+            * DOB (calculate Age)
+            * Ethnicity
+            * Race
+            * Region
+        * WaiverType:
+            * Waiver
+        * GER: (DD Waiver, Therap only)
+            * GER_Provider
+            * GER_Region
+            * GER_Waiver
+            * GER_Individual_Birth_Date           : to calculate age vs GER_Event_Date
+            * GER_Event_Date                      : to calculate age
+            * GER_Event_Type
+            * GER_Abuse_Suspected
+            * GER_Neglect_Suspected
+            * GER_Exploitation_Suspected
+            * Ger_AtRisk_* features sum over last m months,
+                * GER_AtRisk_Injury
+                * GER_AtRisk_Med_Error
+                * GER_AtRisk_Emergency_Service
+                * GER_AtRisk_Assault
+                * GER_AtRisk_Law_Enforcement
+                * GER_AtRisk_Elopement
+                * GER_AtRisk_Fall
+                * GER_AtRisk_Restraint
+                * GER_AtRisk_Hospitalization
+                * GER_AtRisk_Suicide_Related_Behavior
+                * GER_AtRisk_PRN_Psych_Use
+                * GER_AtRisk_Sum
+        * Syncronys:
+            * Number of I and E within m months of date
+        * Omnicad:
+            * Number of BSS, RLS, N, and ALL over date range
+            * Conduent_Omnicad_Line_Billed_Amt
+            * Line_Allowed_Chrg_Amt
+            * Conduent_Omnicad_Line_Pd_Amt
+            * calculate:
+            *   dollars per day
+            *   difference between Billed and Pd
+            *   over 6 months and 1 year:
+            *     median, IQR, variability of top 50%, range of top 50%, skewness
+        * RORA:
+            * C_RORA_Primary_Concern
+            * C_RORA_Secondary_Concern
+            * C_RORA_Care_or_Compliance
+            * C_RORA_Risk
+        * BBS:
+            * BBS_AtRisk (number in date range)
+        * e-CHAT:
+            * eCHAT_TotalYs
+            * eCHAT_TotalScore
+            * eCHAT_Acuity
+        * CaseNotes:
+            * DD Waiver: Total of weighted answers to specific questions
+            * MV Waiver: (Waiting on)
+    * Date range: Tuned number of months for each data source for optimal performance on 2023-12-01 over (1, 2, 3, 4, 5, 6 months)
+
+## Data: Read, plot, save, and generate codebooks
+
+Num | Object name               | |  Data   |  Features | COMPLETE
+----|---------------------------|-|---------|-----------|---------
+  1 | Client_Matching           | |    DONE |    DONE   |  YES
+  1 | Client_WaiverType         | |    DONE |    DONE   |  YES
+  2 | Client_BBS                | |    DONE |    DONE   |  YES
+  3 | Client_CaseNotes          | |    DONE |  WORK     | no
+  4 | Client_Conduent_Omnicad   | |    DONE |    DONE   |  YES
+  5 | Client_GER                | |    DONE |    DONE   |  YES
+  6 | Client_IMB_ANE            | |    DONE |    DONE   |  YES
+  7 | Client_MedFrag_LOC        | |   LATER |   LATER   | no
+  8 | Client_RORA               | |    DONE |    DONE   |  YES
+  9 | Client_Syncronys          | |    DONE |    DONE   |  YES
+ 10 | Provider_Matching         | |    DONE |   LATER   | no
+ 11 | Provider_Conduent_Omnicad | |   LATER |   LATER   | no
+ 12 | Provider_PDS_Scorecard    | |   LATER |   LATER   | no
+ 13 | Provider_QMB              | |   LATER |   LATER   | no
+ 14 | Provider_RORA             | |    DONE |   LATER   | no
+
+
+END
