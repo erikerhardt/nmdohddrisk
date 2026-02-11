@@ -14,12 +14,13 @@ dd_prediction_model(
   m_months_BBS = "2 months",
   m_months_CaseNotes = "4 months",
   sw_rfsrc_ntree = 500,
-  sw_alpha = 0.2,
+  sw_alpha_sel = 0.2,
   sw_unit_of_analysis = c("Client_System_ID", "Client_System_ID__ANE_Date")[1],
   sw_select_full = c("select", "full")[1],
   var_subgroup_analysis = "Client_Waiver",
   sw_imbalanced_binary = c(FALSE, TRUE)[1],
   sw_quick_full_only = c(FALSE, TRUE)[1],
+  n_boot_resamples = 20,
   sw_m_months_select_quick_full = FALSE,
   sw_m_months_values = list(GER = c(1, 2), Syncronys = c(1, 2), Conduent_Omnicad = c(1),
     RORA = c(1), BBS = c(1), CaseNotes = c(1))
@@ -38,7 +39,7 @@ dd_prediction_model(
 
 \item{sw_rfsrc_ntree}{passed to \code{e_rfstr_classification()}, Random forest, number of trees}
 
-\item{sw_alpha}{passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level}
+\item{sw_alpha_sel}{passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level}
 
 \item{sw_unit_of_analysis}{ID for first ANE or (ID, Date) for all ANE.}
 

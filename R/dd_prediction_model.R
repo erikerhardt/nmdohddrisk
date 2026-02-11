@@ -10,7 +10,7 @@
 #' @param m_months_RORA                 RORA      data, date range to keep, from first ANE or last observation back number of months
 #' @param m_months_BBS                  BBS       data, date range to keep, from first ANE or last observation back number of months
 #' @param sw_rfsrc_ntree                passed to \code{e_rfstr_classification()}, Random forest, number of trees
-#' @param sw_alpha                      passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level
+#' @param sw_alpha_sel                  passed to \code{e_rfstr_classification()}, Random forest, model selection alpha level
 #' @param sw_unit_of_analysis           ID for first ANE or (ID, Date) for all ANE.
 #' @param sw_select_full                passed to \code{e_rfstr_classification()}, run RF with model selection, or only fit full model
 #' @param var_subgroup_analysis         passed to \code{e_rfstr_classification()}, variable(s) list (in \code{c(var1, var2)}) for subgroup analysis (group-specific ROC curves and confusion matrices) using ROC threshold from non-subgroup ROC curve, or \code{NULL} for none
@@ -59,12 +59,13 @@ dd_prediction_model <-
   , m_months_BBS                  = "2 months"  #"12 months"
   , m_months_CaseNotes            = "4 months"  #"2 months"
   , sw_rfsrc_ntree                = 500
-  , sw_alpha                      = 0.20
+  , sw_alpha_sel                  = 0.20
   , sw_unit_of_analysis           = c("Client_System_ID", "Client_System_ID__ANE_Date")[1]
   , sw_select_full                = c("select", "full")[1]
   , var_subgroup_analysis         = "Client_Waiver"
   , sw_imbalanced_binary          = c(FALSE, TRUE)[1]
   , sw_quick_full_only            = c(FALSE, TRUE)[1]
+  , n_boot_resamples              = 20
   , sw_m_months_select_quick_full = FALSE
   , sw_m_months_values            = list(  # or just FALSE
                                       GER              = c(1, 2)
@@ -411,8 +412,9 @@ dd_prediction_model <-
       , rf_x_var                = NULL
       , rf_id_var               = sw_unit_of_analysis   #"Client_System_ID__ANE_Date"  # "Client_System_ID"
       , sw_rfsrc_ntree          = sw_rfsrc_ntree
-      , sw_alpha                = sw_alpha
+      , sw_alpha_sel            = sw_alpha_sel
       , sw_select_full          = sw_select_full
+      , sw_na_action            = c("na.omit", "na.impute")[1]
       , sw_save_model           = c(TRUE, FALSE)[2]
       , plot_title              = name_analysis
       , out_path                = file.path(path_list$path_results_out, path_list$path_prefix_out)
@@ -421,7 +423,13 @@ dd_prediction_model <-
       , plot_format             = c("png", "pdf")[1]
       , n_marginal_plot_across  = 6
       , sw_imbalanced_binary    = sw_imbalanced_binary
+      , sw_threshold_to_use     = c(FALSE, TRUE)[1]
       , sw_quick_full_only      = sw_quick_full_only
+      , sw_reduce_output        = c(TRUE, FALSE)[1]
+      , sw_subsample_bootstrap  = c(TRUE, FALSE)[2]
+      , n_single_decision_tree_plots = 0
+      , k_partial_coplot_var    = 0
+      , n_boot_resamples        = n_boot_resamples
       )
 
     if (sw_quick_full_only) {
@@ -522,8 +530,9 @@ dd_prediction_model <-
         , rf_x_var                = NULL
         , rf_id_var               = "Client_System_ID"
         , sw_rfsrc_ntree          = sw_rfsrc_ntree
-        , sw_alpha                = sw_alpha
+        , sw_alpha_sel            = sw_alpha_sel
         , sw_select_full          = sw_select_full
+        , sw_na_action            = c("na.omit", "na.impute")[1]
         , sw_save_model           = c(TRUE, FALSE)[2]
         , plot_title              = name_analysis
         , out_path                = file.path(path_list$path_results_out, path_list$path_prefix_out)
@@ -532,7 +541,13 @@ dd_prediction_model <-
         , plot_format             = c("png", "pdf")[1]
         , n_marginal_plot_across  = 6
         , sw_imbalanced_binary    = sw_imbalanced_binary
+        , sw_threshold_to_use     = c(FALSE, TRUE)[1]
         , sw_quick_full_only      = sw_quick_full_only
+        , sw_reduce_output        = c(TRUE, FALSE)[1]
+        , sw_subsample_bootstrap  = c(TRUE, FALSE)[2]
+        , n_single_decision_tree_plots = 0
+        , k_partial_coplot_var    = 0
+        , n_boot_resamples        = n_boot_resamples
         )
 
       out <-
