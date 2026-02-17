@@ -425,7 +425,7 @@ dd_prediction_model <-
       , sw_imbalanced_binary    = sw_imbalanced_binary
       , sw_threshold_to_use     = c(FALSE, TRUE)[1]
       , sw_quick_full_only      = sw_quick_full_only
-      , sw_reduce_output        = c(TRUE, FALSE)[1]
+      , sw_reduce_output        = c(TRUE, FALSE)[2]
       , sw_subsample_bootstrap  = c(TRUE, FALSE)[2]
       , n_single_decision_tree_plots = 0
       , k_partial_coplot_var    = 0

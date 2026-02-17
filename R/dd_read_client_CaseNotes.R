@@ -44,6 +44,8 @@ dd_read_client_CaseNotes <-
     , "CaseNotes_MV_Detail"       , "CaseNotes_MV_Questionnaire"        , "Mi Via Waiver RPM Questions with Weights.xlsx"
     , "CaseNotes_DD_Child_Detail" , "CaseNotes_DD_Child_Questionnaire"  , "DD Waiver Child RPM Questions with Weights.xlsx"
     , "CaseNotes_Supports_Detail" , "CaseNotes_Supports_Questionnaire"  , "Supports Waiver RPM Questions with Weights.xlsx"
+    , "CaseNotes_2025_DD_Detail"  , "CaseNotes_2025_DD_Questionnaire"   , "DD Waiver RPM Questions with Weights 2025.xlsx"
+    , "CaseNotes_2025_MV_Detail"  , "CaseNotes_2025_MV_Questionnaire"   , "Mi Via Waiver RPM Questions with Weights 2025.xlsx"
     )
 
   dat_client_CaseNotes_all <- list()
@@ -224,13 +226,13 @@ dd_read_client_CaseNotes <-
           , CaseNotes_Answer   = list_client_CaseNotes_Weights[[ i_row ]][[ this_col_name ]]
           , CaseNotes_AtRisk   = this_col_name |> e_extract_numbers_from_string() |> as.numeric()
           )
-      }
+      } # i_col
 
       dat_client_CaseNotes_Weights[[ i_row ]] <-
         dat_client_CaseNotes_Weights[[ i_row ]] |>
         dplyr::bind_rows()
 
-    }
+    } # i_row
 
     dat_client_CaseNotes_Weights <-
       dat_client_CaseNotes_Weights |>
